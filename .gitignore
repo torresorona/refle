@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------------------
+# refle: JavaScript / monorepo
+# ---------------------------------------------------------------------------
+node_modules/
+.next/
+out/
+.turbo/
+dist/
+*.tsbuildinfo
+.vercel
+next-env.d.ts
+
+# Note: uv.lock IS committed (reproducible installs) — do not ignore it.

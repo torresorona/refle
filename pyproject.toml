@@ -1,0 +1,33 @@
+# Root uv workspace for the Python side of refle.
+# Members are the libs/* and services/* packages; install everything with:
+#   uv sync --all-packages
+[tool.uv.workspace]
+members = ["libs/*", "services/*"]
+
+[tool.uv.sources]
+refle-core = { workspace = true }
+refle-extensions = { workspace = true }
+refle-integrations = { workspace = true }
+refle-ai-core = { workspace = true }
+refle-api = { workspace = true }
+refle-worker = { workspace = true }
+
+[dependency-groups]
+dev = [
+  "ruff>=0.6",
+  "pytest>=8",
+  "pytest-asyncio>=0.23",
+  "httpx>=0.27",
+  "alembic>=1.13",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["libs", "services"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

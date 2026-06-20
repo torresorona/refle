@@ -1,0 +1,17 @@
+{
+  "name": "@refle/sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript client types generated from the refle API OpenAPI schema.",
+  "exports": {
+    ".": "./schema.d.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ./openapi.json -o ./schema.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.5.0",
+    "typescript": "^5.6.3"
+  }
+}

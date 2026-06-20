@@ -1,0 +1,67 @@
+# Local development infrastructure for refle.
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# Provides: Postgres (with pgvector), Redis, and MinIO (S3-compatible object store).
+# App services (api / worker / web) run on the host for fast reloads — see the Makefile.
+name: refle
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: refle
+      POSTGRES_PASSWORD: refle
+      POSTGRES_DB: refle
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U refle -d refle"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: refle
+      MINIO_ROOT_PASSWORD: refle-secret
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # web console
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: create the evidence bucket, then exit.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 refle refle-secret &&
+      mc mb --ignore-existing local/refle-evidence &&
+      echo 'bucket ready';
+      "
+
+volumes:
+  pgdata:
+  miniodata:

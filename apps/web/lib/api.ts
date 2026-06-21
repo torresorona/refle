@@ -91,6 +91,17 @@ export type OrgControl = {
   control: Control;
   status: ControlStatus;
   owner_id: string | null;
+  in_scope: boolean;
+};
+
+export type AuditLog = {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  summary: string | null;
+  created_at: string;
 };
 export type Posture = {
   total: number;
@@ -342,10 +353,19 @@ export const api = {
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   me: () => request<Me>("/auth/me"),
   meta: () => request<Meta>("/meta"),
+  switchOrg: (organization_id: string) =>
+    request<AuthToken>("/auth/switch-org", {
+      method: "POST",
+      body: JSON.stringify({ organization_id }),
+    }),
+  auditLog: () => request<AuditLog[]>("/audit-log"),
 
   controls: () => request<OrgControl[]>("/controls"),
   posture: () => request<Posture>("/controls/posture"),
-  updateControl: (id: string, d: { status?: ControlStatus; owner_id?: string }) =>
+  updateControl: (
+    id: string,
+    d: { status?: ControlStatus; owner_id?: string; in_scope?: boolean },
+  ) =>
     request<OrgControl>(`/controls/${id}`, {
       method: "PATCH",
       body: JSON.stringify(d),

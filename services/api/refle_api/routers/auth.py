@@ -30,6 +30,7 @@ from refle_api.schemas import (
     MeResponse,
     OrgOut,
     RegisterRequest,
+    SwitchOrgRequest,
 )
 from refle_api.services import bootstrap_org_controls, new_invite_token, unique_org_slug
 
@@ -97,6 +98,28 @@ async def login(body: LoginRequest, response: Response, session: SessionDep) -> 
             status_code=status.HTTP_403_FORBIDDEN, detail="user has no organization"
         )
     token = _token_for(user, membership.organization_id, membership.role)
+    set_session_cookie(response, token.access_token)
+    return token
+
+
+@router.post("/switch-org", response_model=AuthToken)
+async def switch_org(
+    body: SwitchOrgRequest, response: Response, ctx: AuthDep, session: SessionDep
+) -> AuthToken:
+    """Re-issue the session for another org the user belongs to."""
+    membership = (
+        await session.execute(
+            select(Membership).where(
+                Membership.user_id == ctx.user.id,
+                Membership.organization_id == body.organization_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if membership is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="not a member of that organization"
+        )
+    token = _token_for(ctx.user, body.organization_id, membership.role)
     set_session_cookie(response, token.access_token)
     return token
 

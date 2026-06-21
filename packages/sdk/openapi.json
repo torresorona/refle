@@ -157,6 +157,53 @@
         }
       }
     },
+    "/auth/switch-org": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Switch Org",
+        "description": "Re-issue the session for another org the user belongs to.",
+        "operationId": "switch_org_auth_switch_org_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwitchOrgRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/auth/logout": {
       "post": {
         "tags": [
@@ -2476,6 +2523,36 @@
           }
         }
       }
+    },
+    "/audit-log": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "List Audit Log",
+        "operationId": "list_audit_log_audit_log_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLogOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Audit Log Audit Log Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -2859,6 +2936,80 @@
           "completed"
         ],
         "title": "AccessReviewStatus"
+      },
+      "AuditLogOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "target_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Type"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "actor_id",
+          "action",
+          "target_type",
+          "target_id",
+          "summary",
+          "created_at"
+        ],
+        "title": "AuditLogOut"
       },
       "AuthToken": {
         "properties": {
@@ -3320,6 +3471,11 @@
               }
             ],
             "title": "Last Test Passed"
+          },
+          "in_scope": {
+            "type": "boolean",
+            "title": "In Scope",
+            "default": true
           }
         },
         "type": "object",
@@ -3951,6 +4107,11 @@
               }
             ],
             "title": "Owner Id"
+          },
+          "in_scope": {
+            "type": "boolean",
+            "title": "In Scope",
+            "default": true
           }
         },
         "type": "object",
@@ -3985,6 +4146,17 @@
               }
             ],
             "title": "Owner Id"
+          },
+          "in_scope": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Scope"
           }
         },
         "type": "object",
@@ -4797,6 +4969,20 @@
           "auditor"
         ],
         "title": "Role"
+      },
+      "SwitchOrgRequest": {
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Organization Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "organization_id"
+        ],
+        "title": "SwitchOrgRequest"
       },
       "SyncResult": {
         "properties": {

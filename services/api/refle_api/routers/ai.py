@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from refle_ai_core.embeddings import get_embedder
 from refle_ai_core.gateway import AIGateway
 from refle_ai_core.providers.base import Message
@@ -50,7 +50,13 @@ async def ai_status(ctx: AuthDep, session: SessionDep) -> AIStatus:
 
 @router.post("/reindex", response_model=ReindexResult)
 async def reindex(session: SessionDep, ctx: OwnerOrAdmin) -> ReindexResult:
-    count = await index_org_content(session, ctx.organization.id, get_embedder())
+    try:
+        count = await index_org_content(session, ctx.organization.id, get_embedder())
+    except Exception as exc:  # noqa: BLE001 - report upstream embedder failure cleanly
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"embedding provider error: {exc}",
+        ) from exc
     return ReindexResult(indexed=count)
 
 
@@ -59,10 +65,20 @@ async def chat(body: ChatRequest, ctx: AuthDep, session: SessionDep) -> ChatResp
     org_id = ctx.organization.id
     embedder = get_embedder()
 
-    if await _indexed_count(session, org_id) == 0:
-        await index_org_content(session, org_id, embedder)
-
-    hits = await retrieve(session, org_id, body.question, embedder, k=5)
+    try:
+        if await _indexed_count(session, org_id) == 0:
+            await index_org_content(session, org_id, embedder)
+        hits = await retrieve(session, org_id, body.question, embedder, k=5)
+    except Exception as exc:  # noqa: BLE001 - degrade if the embedder is unavailable
+        return ChatResponse(
+            answer=(
+                f"The embedding provider is unavailable ({exc}). Check "
+                "REFLE_AI_EMBEDDING_PROVIDER and GEMINI_API_KEY."
+            ),
+            citations=[],
+            generated=False,
+            model=AIGateway().info.model,
+        )
     citations = [
         Citation(n=i + 1, source_type=h.source_type, source_id=h.source_id, title=h.title)
         for i, h in enumerate(hits)

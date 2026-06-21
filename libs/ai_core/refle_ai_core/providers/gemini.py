@@ -36,7 +36,9 @@ class GeminiProvider:
         url = f"{_BASE_URL}/models/{self.model}:generateContent"
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
-                url, params={"key": self._api_key}, json=self._to_payload(messages)
+                url,
+                headers={"x-goog-api-key": self._api_key},
+                json=self._to_payload(messages),
             )
             response.raise_for_status()
             data = response.json()

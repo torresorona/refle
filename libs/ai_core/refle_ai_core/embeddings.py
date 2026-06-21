@@ -78,7 +78,7 @@ class GeminiEmbedder:
             ]
         }
         with httpx.Client(timeout=60) as client:
-            resp = client.post(url, params={"key": self._api_key}, json=payload)
+            resp = client.post(url, headers={"x-goog-api-key": self._api_key}, json=payload)
             resp.raise_for_status()
             data = resp.json()
         return [e["values"] for e in data["embeddings"]]

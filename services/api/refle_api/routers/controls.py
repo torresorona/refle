@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, status
+from refle_core.audit import record_audit
 from refle_core.models import Control, ControlStatus, Framework, OrgControl, PostureSnapshot
 from sqlalchemy import func, select
 
@@ -65,6 +66,7 @@ async def list_org_controls(ctx: AuthDep, session: SessionDep) -> list[OrgContro
             control=ControlOut.model_validate(c),
             status=oc.status,
             owner_id=oc.owner_id,
+            in_scope=oc.in_scope,
         )
         for oc, c in rows
     ]
@@ -88,18 +90,39 @@ async def update_org_control(
     if oc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="control not found")
 
+    control = await session.get(Control, oc.control_id)
     if body.status is not None:
         oc.status = body.status
+        await record_audit(
+            session,
+            organization_id=ctx.organization.id,
+            actor_id=ctx.user.id,
+            action="control.status",
+            target_type="control",
+            target_id=control.code if control else oc.control_id,
+            summary=f"status set to {body.status.value}",
+        )
     if body.owner_id is not None:
         oc.owner_id = body.owner_id
+    if body.in_scope is not None and body.in_scope != oc.in_scope:
+        oc.in_scope = body.in_scope
+        await record_audit(
+            session,
+            organization_id=ctx.organization.id,
+            actor_id=ctx.user.id,
+            action="control.scope",
+            target_type="control",
+            target_id=control.code if control else oc.control_id,
+            summary=("marked in scope" if body.in_scope else "marked out of scope"),
+        )
     await session.commit()
 
-    control = await session.get(Control, oc.control_id)
     return OrgControlOut(
         id=oc.id,
         control=ControlOut.model_validate(control),
         status=oc.status,
         owner_id=oc.owner_id,
+        in_scope=oc.in_scope,
     )
 
 
@@ -108,7 +131,10 @@ async def posture(ctx: AuthDep, session: SessionDep) -> PostureSummary:
     rows = (
         await session.execute(
             select(OrgControl.status, func.count())
-            .where(OrgControl.organization_id == ctx.organization.id)
+            .where(
+                OrgControl.organization_id == ctx.organization.id,
+                OrgControl.in_scope.is_(True),
+            )
             .group_by(OrgControl.status)
         )
     ).all()

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AssistantPanel } from "@/components/assistant-panel";
+import { AuditPanel } from "@/components/audit-panel";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { IntegrationsPanel } from "@/components/integrations-panel";
 import { NotificationsPanel } from "@/components/notifications-panel";
@@ -41,7 +42,8 @@ type Tab =
   | "integrations"
   | "people"
   | "assistant"
-  | "notifications";
+  | "notifications"
+  | "audit";
 
 const TABS: Tab[] = [
   "controls",
@@ -53,6 +55,7 @@ const TABS: Tab[] = [
   "people",
   "assistant",
   "notifications",
+  "audit",
 ];
 
 export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
@@ -100,6 +103,24 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     }
   }
 
+  async function toggleScope(oc: OrgControl) {
+    const prev = controls;
+    const next = !oc.in_scope;
+    setControls((cs) => cs.map((c) => (c.id === oc.id ? { ...c, in_scope: next } : c)));
+    try {
+      await api.updateControl(oc.id, { in_scope: next });
+      setPosture(await api.posture());
+    } catch {
+      setControls(prev);
+    }
+  }
+
+  async function switchOrg(orgId: string) {
+    if (orgId === me?.organization_id) return;
+    await api.switchOrg(orgId);
+    await load(); // reload everything under the new org context
+  }
+
   async function signOut() {
     try {
       await api.logout();
@@ -125,10 +146,24 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
             )}
           </div>
           {me && (
-            <p className="text-sm text-neutral-500">
-              {me.memberships[0]?.organization.name ?? "Your organization"} ·{" "}
-              {me.email} ({me.role})
-            </p>
+            <div className="mt-1 flex items-center gap-2 text-sm text-neutral-500">
+              {me.memberships.length > 1 ? (
+                <select
+                  value={me.organization_id}
+                  onChange={(e) => switchOrg(e.target.value)}
+                  className="rounded-md border border-neutral-300 bg-transparent px-2 py-0.5 text-sm outline-none dark:border-neutral-700"
+                >
+                  {me.memberships.map((m) => (
+                    <option key={m.organization.id} value={m.organization.id}>
+                      {m.organization.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span>{me.memberships[0]?.organization.name ?? "Your organization"}</span>
+              )}
+              <span>· {me.email} ({me.role})</span>
+            </div>
           )}
         </div>
         <button
@@ -200,6 +235,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                       <th className="px-4 py-2 font-medium">Code</th>
                       <th className="px-4 py-2 font-medium">Control</th>
                       <th className="px-4 py-2 font-medium">Status</th>
+                      <th className="px-4 py-2 font-medium">In scope</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -248,6 +284,20 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                             </span>
                           )}
                         </td>
+                        <td className="px-4 py-3">
+                          {canEdit ? (
+                            <input
+                              type="checkbox"
+                              checked={oc.in_scope}
+                              onChange={() => toggleScope(oc)}
+                              aria-label="In scope"
+                            />
+                          ) : (
+                            <span className="text-xs text-neutral-400">
+                              {oc.in_scope ? "Yes" : "No"}
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -267,6 +317,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
         )}
         {tab === "assistant" && <AssistantPanel canAdmin={!!canEdit} />}
         {tab === "notifications" && <NotificationsPanel canAdmin={!!canEdit} />}
+        {tab === "audit" && <AuditPanel />}
       </div>
     </main>
   );

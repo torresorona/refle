@@ -37,6 +37,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class SwitchOrgRequest(BaseModel):
+    organization_id: uuid.UUID
+
+
 class AuthToken(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -106,11 +110,13 @@ class OrgControlOut(BaseModel):
     control: ControlOut
     status: ControlStatus
     owner_id: uuid.UUID | None
+    in_scope: bool = True
 
 
 class OrgControlUpdate(BaseModel):
     status: ControlStatus | None = None
     owner_id: uuid.UUID | None = None
+    in_scope: bool | None = None
 
 
 class PostureSummary(BaseModel):
@@ -144,6 +150,18 @@ class ControlCoverageOut(BaseModel):
     open_remediations: int
     last_tested_at: datetime | None
     last_test_passed: bool | None
+    in_scope: bool = True
+
+
+class AuditLogOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    actor_id: uuid.UUID | None
+    action: str
+    target_type: str | None
+    target_id: str | None
+    summary: str | None
+    created_at: datetime
 
 
 class FrameworkProgressOut(BaseModel):

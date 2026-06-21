@@ -1,5 +1,17 @@
 # Phase 5 — Audit-readiness, Continuous Monitoring & People/Access Reviews
 
+> **STATUS: ✅ DELIVERED (2026-06-21) — 100% open-core (Apache community core).**
+> Everything below shipped in the community core; **none of it is enterprise-gated.** It works
+> with no Refle-managed AI (BYO key or local/sovereign). Branch
+> `phase-5-readiness-monitoring-people` → [PR #3](https://github.com/torresorona/refle/pull/3).
+> Verification: ruff clean, full pytest green, `next build` passes, migrations apply, and the
+> Readiness/People surfaces were browser-verified.
+>
+> **What was deliberately NOT in Phase 5 (it's Enterprise / later):** multi-org "Account/Group"
+> admin, instance/operator admin, global-catalog editing, SSO/SAML + SCIM, Refle-managed AI
+> models. See `docs/phase-6-admin-and-editions.md` for the open-core admin wrap-up (Tier 1,
+> delivered) and the enterprise roadmap.
+
 In-repo, execution-ready plan. Written to be picked up cold by a coding agent. Each work
 item lists the files to touch, the interface, acceptance criteria, and tests — same format as
 `docs/phase-4-agentic-ai.md`.

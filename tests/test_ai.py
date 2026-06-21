@@ -3,9 +3,22 @@
 import uuid
 
 import pytest
+import refle_ai_core.config as ai_config
 from conftest import db_available
 
 pytestmark = pytest.mark.skipif(not db_available(), reason="requires Postgres on :5432")
+
+
+@pytest.fixture(autouse=True)
+def _offline_ai(monkeypatch):
+    """Keep these tests offline/deterministic regardless of a local .env:
+    hash embeddings (no key) and a local chat provider with no server (so chat
+    deterministically falls back to retrieval-only). monkeypatch auto-restores."""
+    monkeypatch.setenv("REFLE_AI_PROVIDER", "local")
+    monkeypatch.setenv("REFLE_AI_EMBEDDING_PROVIDER", "hash")
+    ai_config.get_ai_settings.cache_clear()
+    yield
+    ai_config.get_ai_settings.cache_clear()
 
 
 async def _auth(client) -> dict[str, str]:
@@ -21,7 +34,7 @@ async def test_status_uses_offline_embedder(client):
     headers = await _auth(client)
     status = (await client.get("/ai/status", headers=headers)).json()
     assert status["embedding_provider"] == "HashEmbedder"
-    assert status["model"] == "gemini-3.5-flash"
+    assert isinstance(status["model"], str) and status["model"]
 
 
 async def test_reindex_then_chat_cites_relevant_control(client):

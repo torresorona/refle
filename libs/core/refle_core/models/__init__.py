@@ -3,6 +3,7 @@
 Alembic's ``env.py`` imports it so autogenerate sees the full schema.
 """
 
+from refle_core.models.ai_run import AiRun, AiRunStatus
 from refle_core.models.base import Base
 from refle_core.models.compliance import (
     Control,
@@ -20,8 +21,16 @@ from refle_core.models.integration import (
     RemediationTask,
 )
 from refle_core.models.invitation import Invitation, InvitationStatus
+from refle_core.models.notification import Notification, NotificationLevel, NotificationSetting
 from refle_core.models.organization import Organization
-from refle_core.models.policy import Policy, PolicyAcceptance, PolicyVersion
+from refle_core.models.policy import (
+    Policy,
+    PolicyAcceptance,
+    PolicyTemplate,
+    PolicyVersion,
+    PolicyVersionStatus,
+    TemplateType,
+)
 from refle_core.models.user import Membership, Role, User
 
 __all__ = [
@@ -42,10 +51,19 @@ __all__ = [
     "Policy",
     "PolicyVersion",
     "PolicyAcceptance",
+    "PolicyTemplate",
+    "PolicyVersionStatus",
+    "TemplateType",
     "Connection",
     "ConnectionStatus",
     "ControlTestResult",
     "RemediationTask",
     "RemediationStatus",
     "Embedding",
+    "AiRun",
+    "AiRunStatus",
+    "Notification",
+    "NotificationLevel",
+    "NotificationSetting",
+    "PolicyVersionStatus",
 ]

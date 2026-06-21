@@ -18,6 +18,7 @@ from refle_integrations.engine import run_connection
 from sqlalchemy import select
 
 from refle_api.deps import AuthDep, OwnerOrAdmin, SessionDep
+from refle_api.notify import dispatch_notifications
 from refle_api.schemas import (
     ConnectionCreate,
     ConnectionOut,
@@ -87,6 +88,8 @@ async def sync_connection(
 ) -> SyncResult:
     conn = await _get_owned(session, connection_id, ctx.organization.id)
     outcome = await run_connection(session, conn)
+    if outcome.notifications:
+        await dispatch_notifications(session, outcome.notifications)
     return SyncResult(
         ok=outcome.ok,
         tests_run=outcome.tests_run,

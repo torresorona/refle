@@ -17,11 +17,13 @@ from refle_core.models import (
     Control,
     ControlStatus,
     ControlTestResult,
+    Notification,
+    NotificationLevel,
     OrgControl,
     RemediationStatus,
     RemediationTask,
 )
-from refle_extensions.registry import connector_registry
+from refle_extensions.registry import agent_registry, connector_registry
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +34,7 @@ class SyncOutcome:
     tests_run: int = 0
     failures: int = 0
     error: str | None = None
+    notifications: list[Notification] | None = None
 
 
 async def run_connection(session: AsyncSession, connection: Connection) -> SyncOutcome:
@@ -68,19 +71,23 @@ async def run_connection(session: AsyncSession, connection: Connection) -> SyncO
             )
             results_by_code.setdefault(code, []).append(outcome.passed)
 
-    failures = await _apply_to_controls(session, connection.organization_id, results_by_code)
+    failures, notifications = await _apply_to_controls(
+        session, connection.organization_id, results_by_code
+    )
 
     connection.status = ConnectionStatus.connected
     connection.last_synced_at = datetime.now(UTC)
     connection.last_error = None
     await session.commit()
-    return SyncOutcome(ok=True, tests_run=tests_run, failures=failures)
+    return SyncOutcome(ok=True, tests_run=tests_run, failures=failures, notifications=notifications)
 
 
 async def _apply_to_controls(
     session: AsyncSession, org_id, results_by_code: dict[str, list[bool]]
-) -> int:
+) -> tuple[int, list[Notification]]:
     failures = 0
+    deltas = []
+    notifications = []
     for code, passes in results_by_code.items():
         all_passed = all(passes)
         if not all_passed:
@@ -94,7 +101,11 @@ async def _apply_to_controls(
             )
         ).scalar_one_or_none()
         if org_control is not None:
-            org_control.status = ControlStatus.passing if all_passed else ControlStatus.failing
+            prev_status = org_control.status
+            new_status = ControlStatus.passing if all_passed else ControlStatus.failing
+            if prev_status != new_status and prev_status != ControlStatus.not_assessed:
+                deltas.append({"code": code, "prev": prev_status.value, "new": new_status.value})
+            org_control.status = new_status
 
         open_tasks = (
             (
@@ -125,4 +136,28 @@ async def _apply_to_controls(
             for task in open_tasks:
                 task.status = RemediationStatus.resolved
 
-    return failures
+    if deltas:
+        try:
+            agent = agent_registry.get("posture-summary")
+            # We don't record an AiRun here for the summary, or we could if we added a dependency.
+            # To keep it simple, we just run the agent.
+            result = await agent.run({"deltas": deltas}, {})
+            summary = result.output
+        except Exception as exc:
+            summary = f"Posture changed for: {', '.join(d['code'] for d in deltas)}. (AI summary unavailable: {exc})"
+
+        has_failures = any(d["new"] == ControlStatus.failing.value for d in deltas)
+        level = NotificationLevel.warning if has_failures else NotificationLevel.info
+        title = "Posture Change Detected"
+
+        notification = Notification(
+            organization_id=org_id,
+            type="posture_change",
+            title=title,
+            body=summary,
+            level=level,
+        )
+        session.add(notification)
+        notifications.append(notification)
+
+    return failures, notifications

@@ -42,6 +42,12 @@ def put_object(key: str, data: bytes, content_type: str | None) -> None:
     )
 
 
+def get_object(key: str) -> bytes:
+    s = get_settings()
+    response = _client().get_object(Bucket=s.s3_bucket, Key=key)
+    return response["Body"].read()
+
+
 def presigned_get(key: str, expires: int = 3600) -> str:
     s = get_settings()
     return _client().generate_presigned_url(

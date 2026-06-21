@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
 from refle_core.models import Policy, PolicyAcceptance, PolicyVersion
+from refle_core.models.policy import PolicyVersionStatus
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +19,7 @@ from refle_api.schemas import (
     PolicyOut,
     PolicyVersionCreate,
     PolicyVersionOut,
+    PolicyVersionUpdate,
 )
 from refle_api.services import slugify
 
@@ -53,22 +55,41 @@ async def _latest_version(session: AsyncSession, policy_id: uuid.UUID) -> Policy
     )
 
 
+async def _latest_published_version(
+    session: AsyncSession, policy_id: uuid.UUID
+) -> PolicyVersion | None:
+    return (
+        (
+            await session.execute(
+                select(PolicyVersion)
+                .where(
+                    PolicyVersion.policy_id == policy_id,
+                    PolicyVersion.status == PolicyVersionStatus.published,
+                )
+                .order_by(PolicyVersion.version.desc())
+            )
+        )
+        .scalars()
+        .first()
+    )
+
+
 async def _policy_out(session: AsyncSession, policy: Policy, user_id: uuid.UUID) -> PolicyOut:
-    latest = await _latest_version(session, policy.id)
+    latest_published = await _latest_published_version(session, policy.id)
     accepted_count = 0
     accepted_by_me = False
-    if latest is not None:
+    if latest_published is not None:
         accepted_count = (
             await session.execute(
                 select(func.count(PolicyAcceptance.id)).where(
-                    PolicyAcceptance.policy_version_id == latest.id
+                    PolicyAcceptance.policy_version_id == latest_published.id
                 )
             )
         ).scalar_one()
         accepted_by_me = (
             await session.execute(
                 select(PolicyAcceptance.id).where(
-                    PolicyAcceptance.policy_version_id == latest.id,
+                    PolicyAcceptance.policy_version_id == latest_published.id,
                     PolicyAcceptance.user_id == user_id,
                 )
             )
@@ -78,7 +99,7 @@ async def _policy_out(session: AsyncSession, policy: Policy, user_id: uuid.UUID)
         name=policy.name,
         slug=policy.slug,
         description=policy.description,
-        latest_version=latest.version if latest else None,
+        latest_version=latest_published.version if latest_published else None,
         accepted_count=accepted_count,
         accepted_by_me=accepted_by_me,
     )
@@ -174,8 +195,64 @@ async def add_version(
             version=next_version,
             body=body.body,
             created_by_id=ctx.user.id,
+            status=PolicyVersionStatus.published,
         )
     )
+    await session.commit()
+    return await _policy_detail(session, policy, ctx.user.id)
+
+
+@router.put("/{policy_id}/versions/{version}", response_model=PolicyDetail)
+async def update_version(
+    policy_id: uuid.UUID,
+    version: int,
+    body: PolicyVersionUpdate,
+    session: SessionDep,
+    ctx: OwnerOrAdmin,
+) -> PolicyDetail:
+    policy = await _get_owned(session, policy_id, ctx.organization.id)
+    policy_version = (
+        await session.execute(
+            select(PolicyVersion).where(
+                PolicyVersion.policy_id == policy.id,
+                PolicyVersion.version == version,
+            )
+        )
+    ).scalar_one_or_none()
+    if not policy_version:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="policy version not found"
+        )
+    if policy_version.status != PolicyVersionStatus.draft:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="only draft versions can be edited"
+        )
+    policy_version.body = body.body
+    await session.commit()
+    return await _policy_detail(session, policy, ctx.user.id)
+
+
+@router.post("/{policy_id}/versions/{version}/publish", response_model=PolicyDetail)
+async def publish_version(
+    policy_id: uuid.UUID,
+    version: int,
+    session: SessionDep,
+    ctx: OwnerOrAdmin,
+) -> PolicyDetail:
+    policy = await _get_owned(session, policy_id, ctx.organization.id)
+    policy_version = (
+        await session.execute(
+            select(PolicyVersion).where(
+                PolicyVersion.policy_id == policy.id,
+                PolicyVersion.version == version,
+            )
+        )
+    ).scalar_one_or_none()
+    if not policy_version:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="policy version not found"
+        )
+    policy_version.status = PolicyVersionStatus.published
     await session.commit()
     return await _policy_detail(session, policy, ctx.user.id)
 
@@ -183,15 +260,15 @@ async def add_version(
 @router.post("/{policy_id}/accept", response_model=PolicyOut)
 async def accept_policy(policy_id: uuid.UUID, ctx: AuthDep, session: SessionDep) -> PolicyOut:
     policy = await _get_owned(session, policy_id, ctx.organization.id)
-    latest = await _latest_version(session, policy.id)
-    if latest is None:
+    latest_published = await _latest_published_version(session, policy.id)
+    if latest_published is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="policy has no versions"
         )
     already = (
         await session.execute(
             select(PolicyAcceptance).where(
-                PolicyAcceptance.policy_version_id == latest.id,
+                PolicyAcceptance.policy_version_id == latest_published.id,
                 PolicyAcceptance.user_id == ctx.user.id,
             )
         )
@@ -199,7 +276,7 @@ async def accept_policy(policy_id: uuid.UUID, ctx: AuthDep, session: SessionDep)
     if already is None:
         session.add(
             PolicyAcceptance(
-                policy_version_id=latest.id,
+                policy_version_id=latest_published.id,
                 user_id=ctx.user.id,
                 accepted_at=datetime.now(UTC),
             )

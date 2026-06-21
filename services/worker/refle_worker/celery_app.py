@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 
 from celery import Celery
+from refle_ai_core.agents import register_builtin_agents
 from refle_core.config import get_settings
 from refle_integrations.connectors import register_builtin_connectors
 
 settings = get_settings()
 register_builtin_connectors()
+register_builtin_agents()
 
 celery_app = Celery(
     "refle",
@@ -41,6 +43,7 @@ def sync_all_connections() -> dict:
 
 
 async def _sync_all() -> dict:
+    from refle_api.notify import dispatch_notifications
     from refle_core.db import get_sessionmaker
     from refle_core.models import Connection
     from refle_integrations.engine import run_connection
@@ -52,6 +55,8 @@ async def _sync_all() -> dict:
         connections = (await session.execute(select(Connection))).scalars().all()
         for connection in connections:
             outcome = await run_connection(session, connection)
+            if outcome.notifications:
+                await dispatch_notifications(session, outcome.notifications)
             synced += 1
             if not outcome.ok:
                 failed += 1

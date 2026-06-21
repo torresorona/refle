@@ -19,6 +19,9 @@ class AISettings(BaseSettings):
     # provider: "gemini" | "openai" | "local"
     provider: str = "gemini"
     model: str = "gemini-3.5-flash"
+
+    # embedding_provider: "hash" (offline, deterministic; dev default) | "gemini"
+    embedding_provider: str = "hash"
     embedding_model: str = "gemini-embedding-001"
 
     # Sovereign mode: any OpenAI-compatible endpoint (Ollama, vLLM, ...).

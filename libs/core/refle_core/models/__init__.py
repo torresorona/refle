@@ -10,6 +10,7 @@ from refle_core.models.compliance import (
     Framework,
     OrgControl,
 )
+from refle_core.models.embedding import Embedding
 from refle_core.models.evidence import Evidence, EvidenceControl, EvidenceSource
 from refle_core.models.integration import (
     Connection,
@@ -46,4 +47,5 @@ __all__ = [
     "ControlTestResult",
     "RemediationTask",
     "RemediationStatus",
+    "Embedding",
 ]

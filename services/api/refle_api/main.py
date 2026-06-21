@@ -15,6 +15,7 @@ from refle_core.config import get_settings
 
 from refle_api import __version__
 from refle_api.routers import (
+    ai,
     auth,
     controls,
     evidence,
@@ -53,6 +54,7 @@ def create_app() -> FastAPI:
     app.include_router(evidence.router)
     app.include_router(policies.router)
     app.include_router(integrations.router)
+    app.include_router(ai.router)
     return app
 
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { AssistantPanel } from "@/components/assistant-panel";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { IntegrationsPanel } from "@/components/integrations-panel";
 import { PoliciesPanel } from "@/components/policies-panel";
@@ -26,7 +27,7 @@ const STATUS_BADGE: Record<ControlStatus, string> = {
     "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
 };
 
-type Tab = "controls" | "evidence" | "policies" | "integrations";
+type Tab = "controls" | "evidence" | "policies" | "integrations" | "assistant";
 
 export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [me, setMe] = useState<Me | null>(null);
@@ -110,7 +111,9 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
       )}
 
       <nav className="mt-8 flex gap-1 border-b border-neutral-200 dark:border-neutral-800">
-        {(["controls", "evidence", "policies", "integrations"] as Tab[]).map((t) => (
+        {(
+          ["controls", "evidence", "policies", "integrations", "assistant"] as Tab[]
+        ).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -225,6 +228,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
         {tab === "integrations" && (
           <IntegrationsPanel canAdmin={!!canEdit} onChanged={load} />
         )}
+        {tab === "assistant" && <AssistantPanel canAdmin={!!canEdit} />}
       </div>
     </main>
   );

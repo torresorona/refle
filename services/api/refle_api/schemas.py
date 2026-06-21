@@ -228,3 +228,36 @@ class RemediationTaskOut(BaseModel):
     detail: str | None
     status: RemediationStatus
     created_at: datetime
+
+
+# --- AI assistant (RAG) ---
+
+
+class ChatRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+
+
+class Citation(BaseModel):
+    n: int
+    source_type: str
+    source_id: str
+    title: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    citations: list[Citation]
+    generated: bool  # False when the LLM is unavailable (retrieval-only fallback)
+    model: str
+
+
+class ReindexResult(BaseModel):
+    indexed: int
+
+
+class AIStatus(BaseModel):
+    provider: str
+    model: str
+    sovereign: bool
+    embedding_provider: str
+    indexed_chunks: int

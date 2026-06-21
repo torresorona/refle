@@ -287,6 +287,7 @@ class ReindexResult(BaseModel):
 class AIStatus(BaseModel):
     provider: str
     model: str
+    agent_model: str
     sovereign: bool
     embedding_provider: str
     indexed_chunks: int

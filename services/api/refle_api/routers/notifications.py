@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+import uuid
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, HTTPException, status
 from refle_core.crypto import encrypt
 from refle_core.models import Notification, NotificationSetting
 from sqlalchemy import select
@@ -28,6 +31,29 @@ async def list_notifications(ctx: AuthDep, session: SessionDep) -> list[Notifica
         .all()
     )
     return [NotificationOut.model_validate(r) for r in rows]
+
+
+@router.post("/{notification_id}/read", response_model=NotificationOut)
+async def mark_read(
+    notification_id: uuid.UUID, ctx: AuthDep, session: SessionDep
+) -> NotificationOut:
+    notif = (
+        await session.execute(
+            select(Notification).where(
+                Notification.id == notification_id,
+                Notification.organization_id == ctx.organization.id,
+            )
+        )
+    ).scalar_one_or_none()
+    if notif is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="notification not found"
+        )
+    if notif.read_at is None:
+        notif.read_at = datetime.now(UTC)
+        await session.commit()
+        await session.refresh(notif)
+    return NotificationOut.model_validate(notif)
 
 
 @router.get("/settings", response_model=NotificationSettingOut)
@@ -75,7 +101,9 @@ async def update_settings(
     if body.email_to is not None:
         setting.email_to = body.email_to
     if body.slack_webhook_url is not None:
-        setting.slack_webhook_url = encrypt(body.slack_webhook_url)
+        # An empty string clears the webhook; otherwise store it encrypted at rest.
+        url = body.slack_webhook_url
+        setting.slack_webhook_url = encrypt(url) if url else None
 
     await session.commit()
     await session.refresh(setting)

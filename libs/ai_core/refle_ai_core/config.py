@@ -19,6 +19,10 @@ class AISettings(BaseSettings):
     # provider: "gemini" | "openai" | "local"
     provider: str = "gemini"
     model: str = "gemini-3.5-flash"
+    # Agent tier: a (typically stronger) model for reasoning-heavy agents such as
+    # policy drafting and posture summaries. Set REFLE_AI_AGENT_MODEL to your
+    # provider's Pro SKU for higher-quality output. Defaults to the chat model so
+    # the platform works out of the box without provisioning a second SKU.
     agent_model: str = "gemini-3.5-flash"
 
     # embedding_provider: "hash" (offline, deterministic; dev default) | "gemini"

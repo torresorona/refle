@@ -6,9 +6,8 @@ from fastapi import APIRouter, HTTPException, status
 from refle_ai_core.embeddings import get_embedder
 from refle_ai_core.gateway import AIGateway
 from refle_ai_core.providers.base import Message
+from refle_core.ai_runs import record_agent_run
 from refle_core.models import (
-    AiRun,
-    AiRunStatus,
     Control,
     Embedding,
     Evidence,
@@ -53,10 +52,12 @@ async def _indexed_count(session, org_id) -> int:
 
 @router.get("/status", response_model=AIStatus)
 async def ai_status(ctx: AuthDep, session: SessionDep) -> AIStatus:
-    info = AIGateway().info
+    gateway = AIGateway()
+    info = gateway.info
     return AIStatus(
         provider=info.provider,
         model=info.model,
+        agent_model=gateway.settings.agent_model,
         sovereign=info.sovereign,
         embedding_provider=type(get_embedder()).__name__,
         indexed_chunks=await _indexed_count(session, ctx.organization.id),
@@ -203,26 +204,17 @@ async def draft_policy(
             mime_type=ev.content_type or "application/octet-stream", data=raw_bytes
         )
 
-    # Record AI run
-    ai_run = AiRun(
-        organization_id=org_id,
-        agent_key=agent.key,
-        input={"name": body.name, "instructions": body.instructions},
-        status=AiRunStatus.running,
-        model=AIGateway().settings.agent_model,
-    )
-    session.add(ai_run)
-    await session.commit()
-    await session.refresh(ai_run)
-
+    # Run the agent and record an AiRun audit row (failed runs are persisted too).
+    params = {"name": body.name, "instructions": body.instructions}
     try:
-        result = await agent.run(context, {"name": body.name, "instructions": body.instructions})
-        ai_run.output = result.output
-        ai_run.status = AiRunStatus.succeeded
-    except Exception as exc:
-        ai_run.status = AiRunStatus.failed
-        ai_run.error = str(exc)
-        await session.commit()
+        result, _ = await record_agent_run(
+            session,
+            organization_id=org_id,
+            agent=agent,
+            context=context,
+            params=params,
+        )
+    except Exception as exc:  # noqa: BLE001 - run already recorded as failed; surface a 500
         raise HTTPException(status_code=500, detail=f"Agent failed: {exc}") from exc
 
     # Create policy

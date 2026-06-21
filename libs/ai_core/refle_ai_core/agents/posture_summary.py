@@ -18,6 +18,10 @@ class PostureSummaryAgent(Agent):
     def description(self) -> str:
         return "Summarizes posture changes into plain language and suggests remediation."
 
+    @property
+    def model(self) -> str:
+        return AIGateway().settings.agent_model
+
     async def run(self, context: dict[str, Any], params: dict[str, Any]) -> AgentResult:
         deltas = context.get("deltas", [])
         if not deltas:
@@ -59,8 +63,9 @@ class PostureSummaryAgent(Agent):
         try:
             result = await gateway.provider.generate_structured(messages, schema)
             return SimpleAgentResult(output=result["body"], data=result)
-        except Exception as exc:
-            # Fallback
+        except Exception as exc:  # noqa: BLE001 - degrade to a templated summary when no LLM
+            codes = ", ".join(d["code"] for d in deltas)
             return SimpleAgentResult(
-                output=f"Posture changed for: {', '.join(d['code'] for d in deltas)}. (AI summary unavailable: {exc})"
+                output=f"Posture changed for: {codes}. (AI summary unavailable: {exc})",
+                data={"fallback": True},
             )

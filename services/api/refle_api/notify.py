@@ -1,3 +1,4 @@
+import logging
 from email.message import EmailMessage
 
 import aiosmtplib
@@ -7,6 +8,8 @@ from refle_core.crypto import decrypt
 from refle_core.models import Notification, NotificationSetting
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 
 async def dispatch_notifications(session: AsyncSession, notifications: list[Notification]) -> None:
@@ -32,12 +35,13 @@ async def dispatch_notifications(session: AsyncSession, notifications: list[Noti
                 webhook_url = decrypt(settings.slack_webhook_url)
                 if webhook_url:
                     try:
-                        await client.post(
+                        resp = await client.post(
                             webhook_url,
                             json={"text": f"*{notification.title}*\n{notification.body}"},
                         )
-                    except Exception:
-                        pass
+                        resp.raise_for_status()
+                    except Exception as exc:  # noqa: BLE001 - delivery is best-effort
+                        logger.warning("Slack notification dispatch failed: %s", exc)
 
             if "email" in channels and settings.email_to:
                 if app_settings.smtp_host:
@@ -57,19 +61,20 @@ async def dispatch_notifications(session: AsyncSession, notifications: list[Noti
                             password=app_settings.smtp_password,
                             use_tls=app_settings.smtp_tls,
                         )
-                    except Exception:
-                        pass
+                    except Exception as exc:  # noqa: BLE001 - delivery is best-effort
+                        logger.warning("SMTP notification dispatch failed: %s", exc)
                 elif app_settings.resend_api_key:
                     try:
-                        await client.post(
+                        resp = await client.post(
                             "https://api.resend.com/emails",
                             headers={"Authorization": f"Bearer {app_settings.resend_api_key}"},
                             json={
-                                "from": "notifications@updates.refle.ai",
+                                "from": app_settings.smtp_from,
                                 "to": settings.email_to,
                                 "subject": notification.title,
                                 "html": f"<p>{notification.body}</p>",
                             },
                         )
-                    except Exception:
-                        pass
+                        resp.raise_for_status()
+                    except Exception as exc:  # noqa: BLE001 - delivery is best-effort
+                        logger.warning("Resend notification dispatch failed: %s", exc)

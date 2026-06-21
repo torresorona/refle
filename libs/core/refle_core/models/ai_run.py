@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from refle_core.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 
-class AiRunStatus(str, enum.Enum):
+class AiRunStatus(enum.StrEnum):
     running = "running"
     succeeded = "succeeded"
     failed = "failed"

@@ -128,7 +128,7 @@ ipython_config.py
 __pypackages__/
 
 # Celery stuff
-celerybeat-schedule
+celerybeat-schedule*
 celerybeat.pid
 
 # Redis
@@ -230,3 +230,8 @@ dist/
 next-env.d.ts
 
 # Note: uv.lock IS committed (reproducible installs) — do not ignore it.
+
+# apps/web/lib is Next.js source (e.g. api.ts), not a Python build dir.
+# Re-include it: the stock Python `lib/` rule above was swallowing it.
+!apps/web/lib/
+!apps/web/lib/**

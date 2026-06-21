@@ -18,10 +18,15 @@ class DraftPolicyAgent(Agent):
     def description(self) -> str:
         return "Drafts a new policy document based on instructions and SOC 2 context."
 
+    @property
+    def model(self) -> str:
+        return AIGateway().settings.agent_model
+
     async def run(self, context: dict[str, Any], params: dict[str, Any]) -> AgentResult:
         instructions = params.get("instructions", "")
         name = params.get("name", "New Policy")
         in_scope_controls = context.get("controls", [])
+        template_body = context.get("template_body")
 
         controls_text = "\n".join(
             f"- {c['code']}: {c['title']} ({c['description']})" for c in in_scope_controls
@@ -38,14 +43,18 @@ class DraftPolicyAgent(Agent):
             user_content += f"Special Instructions: {instructions}\n"
         if controls_text:
             user_content += f"\nRelevant SOC 2 Controls to address:\n{controls_text}\n"
-
-        template_body = context.get("template_body")
         if template_body:
-            user_content += f"\nUse the following template as a structural baseline for the policy:\n{template_body}\n"
+            user_content += (
+                "\nUse the following template as a structural baseline for the policy:\n"
+                f"{template_body}\n"
+            )
 
         attachment = context.get("attachment")
         if attachment:
-            user_content += "\nAlso refer to the attached document/evidence as a primary source for the policy structure and contents."
+            user_content += (
+                "\nAlso refer to the attached document/evidence as a primary source "
+                "for the policy structure and contents."
+            )
 
         schema = {
             "type": "object",
@@ -66,5 +75,37 @@ class DraftPolicyAgent(Agent):
             ),
         ]
 
-        result = await gateway.provider.generate_structured(messages, schema)
-        return SimpleAgentResult(output=result["body"], data=result)
+        try:
+            result = await gateway.provider.generate_structured(messages, schema)
+            return SimpleAgentResult(output=result["body"], data=result)
+        except Exception as exc:  # noqa: BLE001 - degrade to a templated draft when no LLM
+            body = self._fallback_body(name, instructions, template_body, controls_text, exc)
+            return SimpleAgentResult(output=body, data={"body": body, "fallback": True})
+
+    @staticmethod
+    def _fallback_body(
+        name: str,
+        instructions: str,
+        template_body: str | None,
+        controls_text: str,
+        exc: Exception,
+    ) -> str:
+        """A usable, human-editable starting point when AI drafting is unavailable.
+
+        Prefers the chosen template verbatim; otherwise a minimal skeleton that
+        lists the in-scope controls so a reviewer can flesh it out.
+        """
+        if template_body:
+            base = template_body
+        else:
+            sections = [f"# {name}", "", "## Purpose", "_Describe the purpose of this policy._", ""]
+            if controls_text:
+                sections += ["## Controls addressed", controls_text, ""]
+            base = "\n".join(sections)
+        note = (
+            "\n\n> This draft was generated without an AI model "
+            f"(AI drafting unavailable: {exc}). Review and edit before publishing."
+        )
+        if instructions:
+            note = f"\n\n> Drafting instructions: {instructions}" + note
+        return base + note

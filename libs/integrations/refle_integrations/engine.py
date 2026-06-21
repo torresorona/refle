@@ -10,6 +10,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from refle_core.ai_runs import record_agent_run
 from refle_core.crypto import decrypt
 from refle_core.models import (
     Connection,
@@ -137,14 +138,23 @@ async def _apply_to_controls(
                 task.status = RemediationStatus.resolved
 
     if deltas:
+        codes = ", ".join(d["code"] for d in deltas)
+        summary = f"Posture changed for: {codes}."
         try:
             agent = agent_registry.get("posture-summary")
-            # We don't record an AiRun here for the summary, or we could if we added a dependency.
-            # To keep it simple, we just run the agent.
-            result = await agent.run({"deltas": deltas}, {})
+            # Record an AiRun for the summary; commit happens with the sync below.
+            result, _ = await record_agent_run(
+                session,
+                organization_id=org_id,
+                agent=agent,
+                context={"deltas": deltas},
+                params={},
+                input_record={"deltas": deltas},
+                commit_on_failure=False,
+            )
             summary = result.output
-        except Exception as exc:
-            summary = f"Posture changed for: {', '.join(d['code'] for d in deltas)}. (AI summary unavailable: {exc})"
+        except Exception as exc:  # noqa: BLE001 - never fail a sync over the summary
+            summary = f"Posture changed for: {codes}. (AI summary unavailable: {exc})"
 
         has_failures = any(d["new"] == ControlStatus.failing.value for d in deltas)
         level = NotificationLevel.warning if has_failures else NotificationLevel.info

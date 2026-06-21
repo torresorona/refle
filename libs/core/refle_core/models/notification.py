@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from refle_core.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 
-class NotificationLevel(str, enum.Enum):
+class NotificationLevel(enum.StrEnum):
     info = "info"
     warning = "warning"
 

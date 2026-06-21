@@ -37,6 +37,15 @@ export function NotificationsPanel({ canAdmin }: { canAdmin: boolean }) {
     void load();
   }, [load]);
 
+  async function markRead(id: string) {
+    try {
+      const updated = await api.markNotificationRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? updated : n)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to mark notification read");
+    }
+  }
+
   async function saveSettings(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -70,20 +79,27 @@ export function NotificationsPanel({ canAdmin }: { canAdmin: boolean }) {
               <li
                 key={n.id}
                 className={`rounded-lg border p-4 ${
-                  n.level === "critical"
-                    ? "border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20"
-                    : n.level === "warning"
-                      ? "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20"
-                      : "border-neutral-200 dark:border-neutral-800"
-                }`}
+                  n.level === "warning"
+                    ? "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20"
+                    : "border-neutral-200 dark:border-neutral-800"
+                } ${n.read_at ? "opacity-60" : ""}`}
               >
-                <div className="mb-1 flex items-center justify-between">
+                <div className="mb-1 flex items-center justify-between gap-2">
                   <h3 className="font-medium">{n.title}</h3>
-                  <span className="text-xs text-neutral-400">
+                  <span className="shrink-0 text-xs text-neutral-400">
                     {new Date(n.created_at).toLocaleString()}
                   </span>
                 </div>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">{n.body}</p>
+                {!n.read_at && (
+                  <button
+                    type="button"
+                    onClick={() => markRead(n.id)}
+                    className="mt-2 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200"
+                  >
+                    Mark as read
+                  </button>
+                )}
               </li>
             ))}
           </ul>

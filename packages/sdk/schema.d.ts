@@ -281,6 +281,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/policies/{policy_id}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Version */
+        put: operations["update_version_policies__policy_id__versions__version__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/policies/{policy_id}/versions/{version}/publish": {
         parameters: {
             query?: never;
@@ -555,6 +572,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/{notification_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Read */
+        post: operations["mark_read_notifications__notification_id__read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/notifications/settings": {
         parameters: {
             query?: never;
@@ -573,6 +607,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Templates
+         * @description List globally built-in templates and the organization's custom templates.
+         */
+        get: operations["list_templates_templates_get"];
+        put?: never;
+        /**
+         * Create Template
+         * @description Create a new custom template from text.
+         */
+        post: operations["create_template_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Template */
+        get: operations["get_template_templates__template_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -583,6 +658,8 @@ export interface components {
             provider: string;
             /** Model */
             model: string;
+            /** Agent Model */
+            agent_model: string;
             /** Sovereign */
             sovereign: boolean;
             /** Embedding Provider */
@@ -629,6 +706,15 @@ export interface components {
              */
             organization_id: string;
             role: components["schemas"]["Role"];
+        };
+        /** Body_create_template_templates_post */
+        Body_create_template_templates_post: {
+            /** Name */
+            name: string;
+            /** Body */
+            body: string;
+            /** Description */
+            description?: string | null;
         };
         /** Body_upload_evidence_evidence_post */
         Body_upload_evidence_evidence_post: {
@@ -749,6 +835,10 @@ export interface components {
             name: string;
             /** Instructions */
             instructions?: string | null;
+            /** Template Id */
+            template_id?: string | null;
+            /** Evidence Id */
+            evidence_id?: string | null;
         };
         /** EvidenceOut */
         EvidenceOut: {
@@ -990,6 +1080,48 @@ export interface components {
             /** Accepted By Me */
             accepted_by_me: boolean;
         };
+        /** PolicyTemplateDetailOut */
+        PolicyTemplateDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            type: components["schemas"]["TemplateType"];
+            /** Organization Id */
+            organization_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Body */
+            body: string;
+        };
+        /** PolicyTemplateOut */
+        PolicyTemplateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            type: components["schemas"]["TemplateType"];
+            /** Organization Id */
+            organization_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** PolicyVersionCreate */
         PolicyVersionCreate: {
             /** Body */
@@ -1018,6 +1150,11 @@ export interface components {
          * @enum {string}
          */
         PolicyVersionStatus: "draft" | "published";
+        /** PolicyVersionUpdate */
+        PolicyVersionUpdate: {
+            /** Body */
+            body: string;
+        };
         /** PostureSummary */
         PostureSummary: {
             /** Total */
@@ -1091,6 +1228,11 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /**
+         * TemplateType
+         * @enum {string}
+         */
+        TemplateType: "builtin" | "custom";
         /** TestResultOut */
         TestResultOut: {
             /**
@@ -1604,6 +1746,42 @@ export interface operations {
             };
         };
     };
+    update_version_policies__policy_id__versions__version__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policy_id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyVersionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     publish_version_policies__policy_id__versions__version__publish_post: {
         parameters: {
             query?: never;
@@ -2092,6 +2270,37 @@ export interface operations {
             };
         };
     };
+    mark_read_notifications__notification_id__read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_settings_notifications_settings_get: {
         parameters: {
             query?: never;
@@ -2132,6 +2341,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationSettingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyTemplateOut"][];
+                };
+            };
+        };
+    };
+    create_template_templates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_create_template_templates_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyTemplateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_template_templates__template_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyTemplateDetailOut"];
                 };
             };
             /** @description Validation Error */

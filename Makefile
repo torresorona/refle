@@ -42,6 +42,10 @@ worker: ## Run the Celery worker
 web: ## Run the Next.js dev server
 	npm run dev --workspace apps/web
 
+.PHONY: seed
+seed: ## Seed the SOC 2 control catalog
+	uv run python -m refle_api.seed
+
 .PHONY: openapi
 openapi: ## Export the OpenAPI schema and regenerate the TS SDK types
 	uv run python -c "import json; from refle_api.main import create_app; print(json.dumps(create_app().openapi(), indent=2))" > packages/sdk/openapi.json

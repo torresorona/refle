@@ -14,12 +14,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from refle_core.config import get_settings
 
 from refle_api import __version__
-from refle_api.routers import health, meta
+from refle_api.routers import (
+    auth,
+    controls,
+    evidence,
+    health,
+    integrations,
+    meta,
+    policies,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Hook for loading optional enterprise extensions / warming resources.
+    # Register built-in connectors; the enterprise package registers premium ones here too.
+    from refle_integrations.connectors import register_builtin_connectors
+
+    register_builtin_connectors()
     yield
 
 
@@ -37,6 +48,11 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(meta.router)
+    app.include_router(auth.router)
+    app.include_router(controls.router)
+    app.include_router(evidence.router)
+    app.include_router(policies.router)
+    app.include_router(integrations.router)
     return app
 
 

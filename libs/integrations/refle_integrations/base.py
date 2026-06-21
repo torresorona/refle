@@ -45,6 +45,8 @@ class ControlTest:
 class Connector(Protocol):
     key: str  # e.g. "aws"
     name: str
+    description: str
+    credential_fields: list[str]  # field names the UI prompts for
     tests: list[ControlTest]
 
     def authenticate(self, credentials: dict[str, Any]) -> Any: ...

@@ -1,5 +1,6 @@
 """Open-core extension seams."""
 
+from refle_extensions.auth import AuthIdentity, AuthProvider
 from refle_extensions.licensing import (
     LicenseInfo,
     LicenseProvider,
@@ -21,6 +22,8 @@ __all__ = [
     "connector_registry",
     "agent_registry",
     "auth_provider_registry",
+    "AuthIdentity",
+    "AuthProvider",
     "LicenseInfo",
     "LicenseProvider",
     "OSSLicenseProvider",

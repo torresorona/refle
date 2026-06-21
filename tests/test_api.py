@@ -23,4 +23,4 @@ async def test_meta_reports_gateway_and_license():
     assert data["name"] == "refle"
     assert data["ai"]["model"] == "gemini-3.5-flash"
     assert data["license"]["tier"] == "oss"
-    assert data["connectors"] == []
+    assert isinstance(data["connectors"], list)

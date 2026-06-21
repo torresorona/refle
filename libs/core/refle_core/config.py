@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     env: str = "development"
-    secret_key: str = "dev-only-change-me"
+    secret_key: str = "dev-only-insecure-secret-change-me-in-production"
 
     # Async SQLAlchemy URL (asyncpg driver).
     database_url: str = "postgresql+asyncpg://refle:refle@localhost:5432/refle"

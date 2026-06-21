@@ -24,6 +24,7 @@ from refle_api.routers import (
     meta,
     notifications,
     policies,
+    reports,
     templates,
 )
 
@@ -61,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(ai.router)
     app.include_router(notifications.router)
     app.include_router(templates.router)
+    app.include_router(reports.router)
     return app
 
 

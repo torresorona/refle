@@ -126,6 +126,47 @@ class PostureSnapshotOut(BaseModel):
     created_at: datetime
 
 
+# --- Reports / readiness ---
+
+
+class ControlCoverageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    control_code: str
+    title: str
+    category: str | None
+    status: ControlStatus
+    owner_id: uuid.UUID | None
+    evidence_count: int
+    open_remediations: int
+    last_tested_at: datetime | None
+    last_test_passed: bool | None
+
+
+class FrameworkProgressOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    framework_key: str
+    name: str
+    total: int
+    passing: int
+    failing: int
+    not_assessed: int
+    percent_ready: int
+
+
+class ReadinessReport(BaseModel):
+    framework: FrameworkProgressOut
+    controls: list[ControlCoverageOut]
+
+
+class GapOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    kind: str
+    severity: str
+    title: str
+    recommendation: str
+    control_code: str | None = None
+
+
 # --- Evidence ---
 
 

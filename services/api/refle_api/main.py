@@ -15,6 +15,7 @@ from refle_core.config import get_settings
 
 from refle_api import __version__
 from refle_api.routers import (
+    access_reviews,
     ai,
     auth,
     controls,
@@ -23,6 +24,7 @@ from refle_api.routers import (
     integrations,
     meta,
     notifications,
+    people,
     policies,
     reports,
     templates,
@@ -63,6 +65,8 @@ def create_app() -> FastAPI:
     app.include_router(notifications.router)
     app.include_router(templates.router)
     app.include_router(reports.router)
+    app.include_router(people.router)
+    app.include_router(access_reviews.router)
     return app
 
 

@@ -12,9 +12,11 @@ import json
 import uuid
 import zipfile
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from refle_core.models import (
+    ChecklistItem,
+    ChecklistKind,
     Control,
     ControlStatus,
     ControlTestResult,
@@ -23,11 +25,14 @@ from refle_core.models import (
     Framework,
     Organization,
     OrgControl,
+    Person,
+    PersonStatus,
     Policy,
     PolicyAcceptance,
     PolicyVersion,
     RemediationStatus,
     RemediationTask,
+    TrainingRecord,
 )
 from refle_core.models.policy import PolicyVersionStatus
 from refle_core.posture import posture_counts
@@ -243,6 +248,58 @@ async def compute_gaps(session: AsyncSession, org_id: uuid.UUID) -> list[Gap]:
                     "Have employees review and accept the published policy.",
                 )
             )
+
+    # People: expired training (CC1) and incomplete offboarding (CC6).
+    today = date.today()
+    expired = (
+        (
+            await session.execute(
+                select(TrainingRecord, Person)
+                .join(Person, TrainingRecord.person_id == Person.id)
+                .where(
+                    TrainingRecord.organization_id == org_id,
+                    TrainingRecord.expires_at.is_not(None),
+                    TrainingRecord.expires_at < today,
+                )
+            )
+        )
+        .all()
+    )
+    for record, person in expired:
+        gaps.append(
+            Gap(
+                "training_expired",
+                "medium",
+                f"Training '{record.course}' expired for {person.full_name}",
+                "Reassign and complete the required security training.",
+            )
+        )
+
+    incomplete_offboarding = (
+        (
+            await session.execute(
+                select(Person.full_name, func.count(ChecklistItem.id))
+                .join(ChecklistItem, ChecklistItem.person_id == Person.id)
+                .where(
+                    Person.organization_id == org_id,
+                    Person.status == PersonStatus.terminated,
+                    ChecklistItem.kind == ChecklistKind.offboarding,
+                    ChecklistItem.done_at.is_(None),
+                )
+                .group_by(Person.id, Person.full_name)
+            )
+        )
+        .all()
+    )
+    for name, pending in incomplete_offboarding:
+        gaps.append(
+            Gap(
+                "offboarding_incomplete",
+                "high",
+                f"Offboarding incomplete for {name} ({pending} step(s) pending)",
+                "Complete all offboarding steps to fully revoke access.",
+            )
+        )
 
     return gaps
 

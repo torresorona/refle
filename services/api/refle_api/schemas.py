@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from refle_core.models import (
+    AccessDecision,
+    AccessReviewStatus,
+    ChecklistKind,
     ConnectionStatus,
     ControlStatus,
     EvidenceSource,
     InvitationStatus,
     NotificationLevel,
+    PersonStatus,
     RemediationStatus,
     Role,
     TemplateType,
@@ -376,3 +380,100 @@ class NotificationSettingUpdate(BaseModel):
     channels: str | None = None
     email_to: str | None = None
     slack_webhook_url: str | None = None
+
+
+# --- People & access reviews ---
+
+
+class PersonCreate(BaseModel):
+    full_name: str = Field(min_length=1, max_length=200)
+    email: EmailStr
+    title: str | None = None
+    start_date: date | None = None
+    manager_id: uuid.UUID | None = None
+
+
+class PersonUpdate(BaseModel):
+    full_name: str | None = None
+    title: str | None = None
+    status: PersonStatus | None = None
+    end_date: date | None = None
+    manager_id: uuid.UUID | None = None
+
+
+class PersonOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    full_name: str
+    email: str
+    title: str | None
+    status: PersonStatus
+    start_date: date | None
+    end_date: date | None
+    manager_id: uuid.UUID | None
+    user_id: uuid.UUID | None
+    created_at: datetime
+
+
+class ChecklistItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    person_id: uuid.UUID
+    kind: ChecklistKind
+    label: str
+    done_at: datetime | None
+
+
+class TrainingCreate(BaseModel):
+    course: str = Field(min_length=1, max_length=200)
+    completed_at: date | None = None
+    expires_at: date | None = None
+
+
+class TrainingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    person_id: uuid.UUID
+    course: str
+    completed_at: date | None
+    expires_at: date | None
+
+
+class AccessReviewItemInput(BaseModel):
+    system: str = Field(min_length=1, max_length=120)
+    person_id: uuid.UUID | None = None
+    access_detail: str | None = None
+
+
+class AccessReviewCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    due_at: datetime | None = None
+    items: list[AccessReviewItemInput] = Field(default_factory=list)
+
+
+class AccessReviewItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    person_id: uuid.UUID | None
+    system: str
+    access_detail: str | None
+    decision: AccessDecision
+    reviewed_at: datetime | None
+
+
+class AccessReviewOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    status: AccessReviewStatus
+    due_at: datetime | None
+    completed_at: datetime | None
+    created_at: datetime
+
+
+class AccessReviewDetail(AccessReviewOut):
+    items: list[AccessReviewItemOut]
+
+
+class AccessDecisionInput(BaseModel):
+    decision: AccessDecision

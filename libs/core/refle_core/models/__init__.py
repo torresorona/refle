@@ -24,6 +24,17 @@ from refle_core.models.integration import (
 from refle_core.models.invitation import Invitation, InvitationStatus
 from refle_core.models.notification import Notification, NotificationLevel, NotificationSetting
 from refle_core.models.organization import Organization
+from refle_core.models.people import (
+    AccessDecision,
+    AccessReview,
+    AccessReviewItem,
+    AccessReviewStatus,
+    ChecklistItem,
+    ChecklistKind,
+    Person,
+    PersonStatus,
+    TrainingRecord,
+)
 from refle_core.models.policy import (
     Policy,
     PolicyAcceptance,
@@ -68,4 +79,13 @@ __all__ = [
     "NotificationLevel",
     "NotificationSetting",
     "PolicyVersionStatus",
+    "Person",
+    "PersonStatus",
+    "ChecklistItem",
+    "ChecklistKind",
+    "TrainingRecord",
+    "AccessReview",
+    "AccessReviewStatus",
+    "AccessReviewItem",
+    "AccessDecision",
 ]

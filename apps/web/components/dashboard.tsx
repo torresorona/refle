@@ -6,7 +6,10 @@ import { AssistantPanel } from "@/components/assistant-panel";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { IntegrationsPanel } from "@/components/integrations-panel";
 import { NotificationsPanel } from "@/components/notifications-panel";
+import { PeoplePanel } from "@/components/people-panel";
 import { PoliciesPanel } from "@/components/policies-panel";
+import { PostureTrend } from "@/components/posture-trend";
+import { ReadinessPanel } from "@/components/readiness-panel";
 import { TemplatesPanel } from "@/components/templates-panel";
 import {
   type ControlStatus,
@@ -29,12 +32,34 @@ const STATUS_BADGE: Record<ControlStatus, string> = {
     "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
 };
 
-type Tab = "controls" | "evidence" | "policies" | "templates" | "integrations" | "assistant" | "notifications";
+type Tab =
+  | "controls"
+  | "readiness"
+  | "evidence"
+  | "policies"
+  | "templates"
+  | "integrations"
+  | "people"
+  | "assistant"
+  | "notifications";
+
+const TABS: Tab[] = [
+  "controls",
+  "readiness",
+  "evidence",
+  "policies",
+  "templates",
+  "integrations",
+  "people",
+  "assistant",
+  "notifications",
+];
 
 export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [me, setMe] = useState<Me | null>(null);
   const [posture, setPosture] = useState<Posture | null>(null);
   const [controls, setControls] = useState<OrgControl[]>([]);
+  const [edition, setEdition] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("controls");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +74,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
       setMe(m);
       setControls(c);
       setPosture(p);
+      api.meta().then((meta) => setEdition(meta.edition)).catch(() => {});
     } catch {
       setError("Failed to load. Is the API running?");
     } finally {
@@ -90,7 +116,14 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     <main className="mx-auto max-w-5xl px-6 py-10">
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">refle</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold tracking-tight">refle</h1>
+            {edition && (
+              <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-700">
+                {edition === "core" ? "Hosted Core" : edition}
+              </span>
+            )}
+          </div>
           {me && (
             <p className="text-sm text-neutral-500">
               {me.memberships[0]?.organization.name ?? "Your organization"} ·{" "}
@@ -112,10 +145,8 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
         </p>
       )}
 
-      <nav className="mt-8 flex gap-1 border-b border-neutral-200 dark:border-neutral-800">
-        {(
-          ["controls", "evidence", "policies", "templates", "integrations", "assistant", "notifications"] as Tab[]
-        ).map((t) => (
+      <nav className="mt-8 flex flex-wrap gap-1 border-b border-neutral-200 dark:border-neutral-800">
+        {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -154,6 +185,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                   <Stat label="Failing" value={posture.failing} />
                   <Stat label="Not assessed" value={posture.not_assessed} />
                 </div>
+                <PostureTrend />
               </section>
             )}
 
@@ -225,8 +257,10 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
           </>
         )}
 
+        {tab === "readiness" && <ReadinessPanel />}
         {tab === "evidence" && <EvidencePanel canWrite={canWrite} />}
         {tab === "policies" && <PoliciesPanel canAdmin={!!canEdit} />}
+        {tab === "people" && <PeoplePanel canWrite={canWrite} />}
         {tab === "templates" && <TemplatesPanel canAdmin={!!canEdit} />}
         {tab === "integrations" && (
           <IntegrationsPanel canAdmin={!!canEdit} onChanged={load} />

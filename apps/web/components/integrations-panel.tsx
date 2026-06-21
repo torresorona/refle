@@ -85,6 +85,19 @@ export function IntegrationsPanel({
     }
   }
 
+  async function toggleMonitoring(c: Connection) {
+    setConnections((prev) =>
+      prev.map((x) =>
+        x.id === c.id ? { ...x, monitoring_enabled: !x.monitoring_enabled } : x,
+      ),
+    );
+    try {
+      await api.updateConnection(c.id, { monitoring_enabled: !c.monitoring_enabled });
+    } catch {
+      await load(); // revert from server on failure
+    }
+  }
+
   return (
     <div>
       {canAdmin && (
@@ -177,6 +190,16 @@ export function IntegrationsPanel({
                 >
                   {c.status.replace("_", " ")}
                 </span>
+                {canAdmin && (
+                  <label className="flex items-center gap-1.5 text-xs text-neutral-500">
+                    <input
+                      type="checkbox"
+                      checked={c.monitoring_enabled}
+                      onChange={() => toggleMonitoring(c)}
+                    />
+                    Monitor
+                  </label>
+                )}
                 {canAdmin && (
                   <button
                     onClick={() => sync(c.id)}

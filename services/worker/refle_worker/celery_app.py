@@ -43,21 +43,28 @@ def sync_all_connections() -> dict:
 
 
 async def _sync_all() -> dict:
+    from datetime import UTC, datetime
+
     from refle_api.notify import dispatch_notifications
     from refle_core.db import get_sessionmaker
     from refle_core.models import Connection
-    from refle_integrations.engine import run_connection
+    from refle_integrations.engine import is_due, run_connection
     from sqlalchemy import select
 
+    now = datetime.now(UTC)
     synced = 0
+    skipped = 0
     failed = 0
     async with get_sessionmaker()() as session:
         connections = (await session.execute(select(Connection))).scalars().all()
         for connection in connections:
+            if not is_due(connection, now):
+                skipped += 1
+                continue
             outcome = await run_connection(session, connection)
             if outcome.notifications:
                 await dispatch_notifications(session, outcome.notifications)
             synced += 1
             if not outcome.ok:
                 failed += 1
-    return {"connections": synced, "errored": failed}
+    return {"connections": synced, "skipped": skipped, "errored": failed}

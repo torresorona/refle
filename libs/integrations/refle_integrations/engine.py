@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from refle_core.ai_runs import record_agent_run
 from refle_core.crypto import decrypt
@@ -21,9 +21,11 @@ from refle_core.models import (
     Notification,
     NotificationLevel,
     OrgControl,
+    PostureSnapshot,
     RemediationStatus,
     RemediationTask,
 )
+from refle_core.posture import posture_counts
 from refle_extensions.registry import agent_registry, connector_registry
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,6 +38,22 @@ class SyncOutcome:
     failures: int = 0
     error: str | None = None
     notifications: list[Notification] | None = None
+
+
+def is_due(connection: Connection, now: datetime) -> bool:
+    """Whether the *scheduled* task should sync this connection now.
+
+    Manual syncs (the API endpoint) bypass this. Disabled monitoring is never
+    due; a per-connection interval gates cadence, otherwise the global schedule
+    decides (always eligible when its beat fires).
+    """
+    if not connection.monitoring_enabled:
+        return False
+    if connection.last_synced_at is None:
+        return True
+    if connection.sync_interval_minutes is None:
+        return True
+    return now - connection.last_synced_at >= timedelta(minutes=connection.sync_interval_minutes)
 
 
 async def run_connection(session: AsyncSession, connection: Connection) -> SyncOutcome:
@@ -74,6 +92,18 @@ async def run_connection(session: AsyncSession, connection: Connection) -> SyncO
 
     failures, notifications = await _apply_to_controls(
         session, connection.organization_id, results_by_code
+    )
+
+    # Record a posture snapshot for trend history (after statuses are applied).
+    counts = await posture_counts(session, connection.organization_id)
+    session.add(
+        PostureSnapshot(
+            organization_id=connection.organization_id,
+            passing=counts.passing,
+            failing=counts.failing,
+            not_assessed=counts.not_assessed,
+            percent_ready=counts.percent_ready,
+        )
     )
 
     connection.status = ConnectionStatus.connected

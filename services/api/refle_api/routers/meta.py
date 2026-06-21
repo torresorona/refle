@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 from refle_ai_core.gateway import AIGateway
+from refle_core.config import get_settings
 from refle_extensions.licensing import get_license
 from refle_extensions.registry import agent_registry, connector_registry
 
@@ -23,6 +24,7 @@ async def meta() -> dict:
     return {
         "name": "refle",
         "version": __version__,
+        "edition": get_settings().edition,
         "license": {
             "tier": license_info.tier.value,
             "features": sorted(license_info.features),

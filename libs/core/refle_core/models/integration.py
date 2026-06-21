@@ -6,7 +6,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -34,6 +34,21 @@ class Connection(UUIDMixin, TimestampMixin, TenantMixin, Base):
     created_by_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), default=None
     )
+    # Continuous monitoring: when enabled, the scheduled task re-syncs this
+    # connection. sync_interval_minutes=None means "use the global schedule".
+    monitoring_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    sync_interval_minutes: Mapped[int | None] = mapped_column(Integer, default=None)
+
+
+class PostureSnapshot(UUIDMixin, TimestampMixin, TenantMixin, Base):
+    """A point-in-time count of control posture, for trend history."""
+
+    __tablename__ = "posture_snapshots"
+
+    passing: Mapped[int] = mapped_column(Integer, default=0)
+    failing: Mapped[int] = mapped_column(Integer, default=0)
+    not_assessed: Mapped[int] = mapped_column(Integer, default=0)
+    percent_ready: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class ControlTestResult(UUIDMixin, TimestampMixin, TenantMixin, Base):

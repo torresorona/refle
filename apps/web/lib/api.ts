@@ -56,6 +56,12 @@ async function postForm<T>(path: string, form: FormData): Promise<T> {
 export type Role = "owner" | "admin" | "member" | "auditor";
 export type ControlStatus = "passing" | "failing" | "not_assessed";
 
+export type Meta = {
+  name: string;
+  version: string;
+  edition: string;
+};
+
 export type AuthToken = {
   access_token: string;
   token_type: string;
@@ -155,8 +161,108 @@ export type Connection = {
   status: "never_synced" | "connected" | "error";
   last_synced_at: string | null;
   last_error: string | null;
+  monitoring_enabled: boolean;
+  sync_interval_minutes: number | null;
   created_at: string;
 };
+
+// --- Reports / readiness (Phase 5A) ---
+export type FrameworkProgress = {
+  framework_key: string;
+  name: string;
+  total: number;
+  passing: number;
+  failing: number;
+  not_assessed: number;
+  percent_ready: number;
+};
+
+export type ControlCoverage = {
+  control_code: string;
+  title: string;
+  category: string | null;
+  status: ControlStatus;
+  owner_id: string | null;
+  evidence_count: number;
+  open_remediations: number;
+  last_tested_at: string | null;
+  last_test_passed: boolean | null;
+};
+
+export type ReadinessReport = {
+  framework: FrameworkProgress;
+  controls: ControlCoverage[];
+};
+
+export type Gap = {
+  kind: string;
+  severity: "high" | "medium" | "low";
+  title: string;
+  recommendation: string;
+  control_code: string | null;
+};
+
+export type PostureSnapshot = {
+  passing: number;
+  failing: number;
+  not_assessed: number;
+  percent_ready: number;
+  created_at: string;
+};
+
+// --- People & access reviews (Phase 5C) ---
+export type PersonStatus = "active" | "terminated";
+
+export type Person = {
+  id: string;
+  full_name: string;
+  email: string;
+  title: string | null;
+  status: PersonStatus;
+  start_date: string | null;
+  end_date: string | null;
+  manager_id: string | null;
+  user_id: string | null;
+  created_at: string;
+};
+
+export type ChecklistItem = {
+  id: string;
+  person_id: string;
+  kind: "onboarding" | "offboarding";
+  label: string;
+  done_at: string | null;
+};
+
+export type TrainingRecord = {
+  id: string;
+  person_id: string;
+  course: string;
+  completed_at: string | null;
+  expires_at: string | null;
+};
+
+export type AccessDecision = "pending" | "keep" | "revoke";
+
+export type AccessReviewItem = {
+  id: string;
+  person_id: string | null;
+  system: string;
+  access_detail: string | null;
+  decision: AccessDecision;
+  reviewed_at: string | null;
+};
+
+export type AccessReview = {
+  id: string;
+  name: string;
+  status: "open" | "completed";
+  due_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+};
+
+export type AccessReviewDetail = AccessReview & { items: AccessReviewItem[] };
 export type SyncResult = {
   ok: boolean;
   tests_run: number;
@@ -235,6 +341,7 @@ export const api = {
     request<AuthToken>("/auth/login", { method: "POST", body: JSON.stringify(d) }),
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   me: () => request<Me>("/auth/me"),
+  meta: () => request<Meta>("/meta"),
 
   controls: () => request<OrgControl[]>("/controls"),
   posture: () => request<Posture>("/controls/posture"),
@@ -276,7 +383,50 @@ export const api = {
   }) => request<Connection>("/connections", { method: "POST", body: JSON.stringify(d) }),
   syncConnection: (id: string) =>
     request<SyncResult>(`/connections/${id}/sync`, { method: "POST" }),
+  updateConnection: (id: string, d: { monitoring_enabled?: boolean; sync_interval_minutes?: number }) =>
+    request<Connection>(`/connections/${id}`, { method: "PATCH", body: JSON.stringify(d) }),
   remediationTasks: () => request<RemediationTaskRow[]>("/remediation-tasks"),
+
+  // Reports / readiness (Phase 5A)
+  readiness: () => request<ReadinessReport>("/reports/readiness"),
+  gaps: () => request<Gap[]>("/reports/gaps"),
+  postureHistory: (days = 30) =>
+    request<PostureSnapshot[]>(`/controls/posture/history?days=${days}`),
+  downloadAuditPackage: async (): Promise<Blob> => {
+    const res = await fetch(`${API_BASE}/reports/audit-package`, {
+      credentials: "include",
+    });
+    if (!res.ok) throw await toError(res);
+    return res.blob();
+  },
+
+  // People & access reviews (Phase 5C)
+  people: () => request<Person[]>("/people"),
+  createPerson: (d: { full_name: string; email: string; title?: string }) =>
+    request<Person>("/people", { method: "POST", body: JSON.stringify(d) }),
+  updatePerson: (id: string, d: { status?: PersonStatus; title?: string }) =>
+    request<Person>(`/people/${id}`, { method: "PATCH", body: JSON.stringify(d) }),
+  personChecklist: (id: string) =>
+    request<ChecklistItem[]>(`/people/${id}/checklist`),
+  completeChecklistItem: (itemId: string) =>
+    request<ChecklistItem>(`/people/checklist-items/${itemId}/complete`, { method: "POST" }),
+  personTraining: (id: string) => request<TrainingRecord[]>(`/people/${id}/training`),
+  addTraining: (id: string, d: { course: string; completed_at?: string; expires_at?: string }) =>
+    request<TrainingRecord>(`/people/${id}/training`, { method: "POST", body: JSON.stringify(d) }),
+
+  accessReviews: () => request<AccessReview[]>("/access-reviews"),
+  getAccessReview: (id: string) => request<AccessReviewDetail>(`/access-reviews/${id}`),
+  createAccessReview: (d: {
+    name: string;
+    items: { system: string; person_id?: string; access_detail?: string }[];
+  }) => request<AccessReviewDetail>("/access-reviews", { method: "POST", body: JSON.stringify(d) }),
+  decideAccessReviewItem: (itemId: string, decision: AccessDecision) =>
+    request<AccessReviewItem>(`/access-reviews/items/${itemId}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ decision }),
+    }),
+  completeAccessReview: (id: string) =>
+    request<AccessReviewDetail>(`/access-reviews/${id}/complete`, { method: "POST" }),
 
   aiStatus: () => request<AIStatus>("/ai/status"),
   aiReindex: () => request<{ indexed: number }>("/ai/reindex", { method: "POST" }),

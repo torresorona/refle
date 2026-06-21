@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     env: str = "development"
     secret_key: str = "dev-only-insecure-secret-change-me-in-production"
 
+    # Edition (packaging): "core" (Hosted Core / OSS) or "enterprise". The
+    # enterprise package flips this; the UI uses it for "Coming Soon" gating.
+    edition: str = "core"
+
     # Async SQLAlchemy URL (asyncpg driver).
     database_url: str = "postgresql+asyncpg://refle:refle@localhost:5432/refle"
     redis_url: str = "redis://localhost:6379/0"

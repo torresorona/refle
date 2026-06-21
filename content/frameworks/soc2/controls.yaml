@@ -1,30 +1,84 @@
-# SOC 2 Trust Services Criteria — seed catalog (subset of the Common Criteria).
-# Loaded into the `frameworks` / `controls` tables by the Phase 1 seeder.
-# This is a representative starter set, not the complete TSC.
+# SOC 2 Trust Services Criteria — seed catalog (Common Criteria).
+# Loaded into the `frameworks` / `controls` tables by the Phase 1 seeder (`make seed`).
+# Representative coverage of CC1–CC9; not the complete TSC. Crosswalk-ready for ISO 27001.
 framework:
   key: soc2
   name: SOC 2 (Trust Services Criteria)
   version: "2017 (rev. 2022)"
 
 controls:
+  # --- CC1: Control Environment ---
   - code: CC1.1
     category: Control Environment
     title: Commitment to integrity and ethical values
     description: >
       The entity demonstrates a commitment to integrity and ethical values
       through its code of conduct and tone at the top.
+  - code: CC1.2
+    category: Control Environment
+    title: Board independence and oversight
+    description: >
+      The board of directors demonstrates independence from management and
+      exercises oversight of the development and performance of internal control.
+  - code: CC1.4
+    category: Control Environment
+    title: Commitment to competence
+    description: >
+      The entity demonstrates a commitment to attract, develop, and retain
+      competent individuals in alignment with objectives.
+
+  # --- CC2: Communication and Information ---
   - code: CC2.1
     category: Communication and Information
     title: Quality information for internal control
     description: >
       The entity obtains or generates and uses relevant, quality information to
       support the functioning of internal control.
+  - code: CC2.2
+    category: Communication and Information
+    title: Internal communication of objectives
+    description: >
+      The entity internally communicates information, including objectives and
+      responsibilities for internal control, necessary to support its functioning.
+
+  # --- CC3: Risk Assessment ---
+  - code: CC3.1
+    category: Risk Assessment
+    title: Specifies suitable objectives
+    description: >
+      The entity specifies objectives with sufficient clarity to enable the
+      identification and assessment of risks relating to those objectives.
+  - code: CC3.2
+    category: Risk Assessment
+    title: Identifies and analyzes risk
+    description: >
+      The entity identifies risks to the achievement of its objectives and
+      analyzes risks as a basis for determining how they should be managed.
+
+  # --- CC4: Monitoring Activities ---
+  - code: CC4.1
+    category: Monitoring Activities
+    title: Ongoing and separate evaluations
+    description: >
+      The entity selects, develops, and performs ongoing and/or separate
+      evaluations to ascertain whether components of internal control are present
+      and functioning.
+
+  # --- CC5: Control Activities ---
+  - code: CC5.1
+    category: Control Activities
+    title: Selects and develops control activities
+    description: >
+      The entity selects and develops control activities that contribute to the
+      mitigation of risks to the achievement of objectives to acceptable levels.
   - code: CC5.2
     category: Control Activities
     title: Control activities over technology
     description: >
       The entity selects and develops general control activities over technology
       to support the achievement of objectives.
+
+  # --- CC6: Logical and Physical Access ---
   - code: CC6.1
     category: Logical and Physical Access
     title: Logical access security
@@ -43,6 +97,18 @@ controls:
     description: >
       The entity authorizes, modifies, or removes access based on roles and the
       principle of least privilege.
+  - code: CC6.4
+    category: Logical and Physical Access
+    title: Physical access controls
+    description: >
+      The entity restricts physical access to facilities and protected information
+      assets to authorized personnel.
+  - code: CC6.5
+    category: Logical and Physical Access
+    title: Data disposal and access removal
+    description: >
+      The entity discontinues logical and physical protections over assets only
+      after the ability to read or recover data has been diminished.
   - code: CC6.6
     category: Logical and Physical Access
     title: Boundary protection
@@ -53,17 +119,59 @@ controls:
     category: Logical and Physical Access
     title: Encryption of data in transit
     description: >
-      The entity restricts the transmission of data and protects it using
-      encryption during transmission.
+      The entity restricts the transmission, movement, and removal of data and
+      protects it using encryption during transmission.
+  - code: CC6.8
+    category: Logical and Physical Access
+    title: Prevention of unauthorized software
+    description: >
+      The entity implements controls to prevent or detect and act upon the
+      introduction of unauthorized or malicious software.
+
+  # --- CC7: System Operations ---
+  - code: CC7.1
+    category: System Operations
+    title: Vulnerability and configuration monitoring
+    description: >
+      The entity uses detection and monitoring procedures to identify changes to
+      configurations and susceptibilities to newly discovered vulnerabilities.
   - code: CC7.2
     category: System Operations
     title: Security monitoring
     description: >
       The entity monitors system components for anomalies indicative of malicious
       acts, natural disasters, and errors.
+  - code: CC7.3
+    category: System Operations
+    title: Security incident evaluation
+    description: >
+      The entity evaluates security events to determine whether they could or have
+      resulted in a failure to meet objectives, and acts accordingly.
+  - code: CC7.4
+    category: System Operations
+    title: Incident response
+    description: >
+      The entity responds to identified security incidents by executing a defined
+      incident-response program to understand, contain, remediate, and communicate.
+
+  # --- CC8: Change Management ---
   - code: CC8.1
     category: Change Management
     title: Change management
     description: >
       The entity authorizes, designs, develops, tests, approves, and implements
       changes to infrastructure, data, and software.
+
+  # --- CC9: Risk Mitigation ---
+  - code: CC9.1
+    category: Risk Mitigation
+    title: Risk mitigation for business disruptions
+    description: >
+      The entity identifies, selects, and develops risk-mitigation activities for
+      risks arising from potential business disruptions.
+  - code: CC9.2
+    category: Risk Mitigation
+    title: Vendor and third-party risk management
+    description: >
+      The entity assesses and manages risks associated with vendors and business
+      partners that have access to the entity's systems or data.

@@ -36,6 +36,12 @@ class Settings(BaseSettings):
 
     # Email
     resend_api_key: str | None = Field(default=None, validation_alias="RESEND_API_KEY")
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_tls: bool = True
+    smtp_from: str = "notifications@refle.ai"
 
     # Enterprise: a license key unlocks features registered by refle-enterprise.
     license_key: str | None = None

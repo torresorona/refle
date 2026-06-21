@@ -1,18 +1,18 @@
 import asyncio
-from refle_core.db import get_sessionmaker
-from sqlalchemy import select
-from refle_core.models import (
-    OrgControl,
-    Control,
-    Connection,
-    ConnectionStatus,
-    ControlStatus,
-    Organization,
-)
-from refle_integrations.engine import run_connection
-from refle_integrations.connectors import register_builtin_connectors
+
 from refle_ai_core.agents import register_builtin_agents
 from refle_api.notify import dispatch_notifications
+from refle_core.db import get_sessionmaker
+from refle_core.models import (
+    Connection,
+    Control,
+    ControlStatus,
+    Organization,
+    OrgControl,
+)
+from refle_integrations.connectors import register_builtin_connectors
+from refle_integrations.engine import run_connection
+from sqlalchemy import select
 
 
 async def main():

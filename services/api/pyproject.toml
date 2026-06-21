@@ -15,6 +15,7 @@ dependencies = [
   "refle-extensions",
   "refle-integrations",
   "refle-ai-core",
+  "aiosmtplib>=5.1.2",
 ]
 
 [build-system]

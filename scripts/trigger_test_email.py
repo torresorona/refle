@@ -1,8 +1,9 @@
 import asyncio
-from sqlalchemy import select
-from refle_core.db import get_sessionmaker
-from refle_core.models import Notification, NotificationSetting, User, Organization
+
 from refle_api.notify import dispatch_notifications
+from refle_core.db import get_sessionmaker
+from refle_core.models import Notification, NotificationSetting, Organization, User
+from sqlalchemy import select
 
 
 async def main():

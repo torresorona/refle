@@ -29,7 +29,7 @@ your boundary.
 - **AI assistant (RAG)** — ask about your controls/policies/evidence and get answers with
   **citations** (pgvector retrieval). Runs offline with deterministic embeddings, or point
   it at **Gemini** (default), OpenAI, or a local model via one env var.
-- **Agentic Workflows & Notifications** — AI-generated summaries of posture changes delivered via **email (Resend)** and in-app notifications whenever automated tests detect a control failure.
+- **Agentic Workflows & Notifications** — AI-generated summaries of posture changes delivered via **email** and in-app notifications whenever automated tests detect a control failure. Supports **Generic SMTP** (for self-hosted/Google Workspace/Office365 setups) or **Resend API**. Note: *Refle Enterprise* offers custom email integration capabilities and *Refle Hosted* offers a compliant Resend alternative for custom domain notification delivery.
 
 All of the above is covered by tests and was verified end-to-end, including a live Gemini
 key (`gemini-3.5-flash` generation + `gemini-embedding-001` indexing) and live Resend integration.
@@ -76,6 +76,18 @@ Policies, Integrations, and Assistant** tabs. Connect the **Demo** integration a
 (starts with `AIza`), set `REFLE_AI_EMBEDDING_PROVIDER=gemini`, restart the API, then click
 **Reindex** in the Assistant tab. Without a key, the assistant uses offline embeddings and
 returns retrieval-only answers (still with citations).
+
+**Enable Email Notifications**:
+To send emails, `refle` acts as a generic SMTP client. Configure the following environment variables to send emails through your existing provider (e.g. Google Workspace, Office365, or a local Postfix relay):
+```env
+REFLE_SMTP_HOST=smtp.gmail.com
+REFLE_SMTP_PORT=465
+REFLE_SMTP_USER=youremail@company.com
+REFLE_SMTP_PASSWORD=your_app_password
+REFLE_SMTP_TLS=true
+REFLE_SMTP_FROM=notifications@company.com
+```
+*(Alternatively, you can provide a `REFLE_RESEND_API_KEY` to use Resend's API directly).*
 
 Run `make help` to see all developer tasks.
 

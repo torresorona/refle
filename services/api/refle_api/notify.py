@@ -1,3 +1,6 @@
+from email.message import EmailMessage
+
+import aiosmtplib
 import httpx
 from refle_core.config import get_settings
 from refle_core.crypto import decrypt
@@ -36,17 +39,37 @@ async def dispatch_notifications(session: AsyncSession, notifications: list[Noti
                     except Exception:
                         pass
 
-            if "email" in channels and settings.email_to and app_settings.resend_api_key:
-                try:
-                    await client.post(
-                        "https://api.resend.com/emails",
-                        headers={"Authorization": f"Bearer {app_settings.resend_api_key}"},
-                        json={
-                            "from": "notifications@updates.refle.ai",
-                            "to": settings.email_to,
-                            "subject": notification.title,
-                            "html": f"<p>{notification.body}</p>",
-                        },
-                    )
-                except Exception:
-                    pass
+            if "email" in channels and settings.email_to:
+                if app_settings.smtp_host:
+                    try:
+                        msg = EmailMessage()
+                        msg["From"] = app_settings.smtp_from
+                        msg["To"] = settings.email_to
+                        msg["Subject"] = notification.title
+                        msg.set_content(f"{notification.body}")
+                        msg.add_alternative(f"<p>{notification.body}</p>", subtype="html")
+
+                        await aiosmtplib.send(
+                            msg,
+                            hostname=app_settings.smtp_host,
+                            port=app_settings.smtp_port,
+                            username=app_settings.smtp_user,
+                            password=app_settings.smtp_password,
+                            use_tls=app_settings.smtp_tls,
+                        )
+                    except Exception:
+                        pass
+                elif app_settings.resend_api_key:
+                    try:
+                        await client.post(
+                            "https://api.resend.com/emails",
+                            headers={"Authorization": f"Bearer {app_settings.resend_api_key}"},
+                            json={
+                                "from": "notifications@updates.refle.ai",
+                                "to": settings.email_to,
+                                "subject": notification.title,
+                                "html": f"<p>{notification.body}</p>",
+                            },
+                        )
+                    except Exception:
+                        pass

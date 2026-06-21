@@ -1,8 +1,9 @@
 import asyncio
+
 from refle_core.db import get_sessionmaker
-from refle_core.models import OrgControl, Control, Organization, ControlStatus
-from sqlalchemy import select
+from refle_core.models import Control, ControlStatus, Organization, OrgControl
 from refle_worker.celery_app import sync_all_connections
+from sqlalchemy import select
 
 
 async def main():

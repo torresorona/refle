@@ -26,9 +26,9 @@ from refle_core.models.organization import Organization
 from refle_core.models.policy import (
     Policy,
     PolicyAcceptance,
+    PolicyTemplate,
     PolicyVersion,
     PolicyVersionStatus,
-    PolicyTemplate,
     TemplateType,
 )
 from refle_core.models.user import Membership, Role, User

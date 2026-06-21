@@ -17,6 +17,7 @@ from refle_core.models.integration import (
     Connection,
     ConnectionStatus,
     ControlTestResult,
+    PostureSnapshot,
     RemediationStatus,
     RemediationTask,
 )
@@ -57,6 +58,7 @@ __all__ = [
     "Connection",
     "ConnectionStatus",
     "ControlTestResult",
+    "PostureSnapshot",
     "RemediationTask",
     "RemediationStatus",
     "Embedding",

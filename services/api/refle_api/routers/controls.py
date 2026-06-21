@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, status
-from refle_core.models import Control, ControlStatus, Framework, OrgControl
+from refle_core.models import Control, ControlStatus, Framework, OrgControl, PostureSnapshot
 from sqlalchemy import func, select
 
 from refle_api.deps import AuthDep, OwnerOrAdmin, SessionDep
@@ -13,6 +14,7 @@ from refle_api.schemas import (
     ControlOut,
     OrgControlOut,
     OrgControlUpdate,
+    PostureSnapshotOut,
     PostureSummary,
 )
 from refle_api.services import SOC2_FRAMEWORK_KEY, bootstrap_org_controls
@@ -123,3 +125,25 @@ async def posture(ctx: AuthDep, session: SessionDep) -> PostureSummary:
         not_assessed=not_assessed,
         percent_passing=pct,
     )
+
+
+@router.get("/posture/history", response_model=list[PostureSnapshotOut])
+async def posture_history(
+    ctx: AuthDep, session: SessionDep, days: int = 30
+) -> list[PostureSnapshotOut]:
+    since = datetime.now(UTC) - timedelta(days=days)
+    rows = (
+        (
+            await session.execute(
+                select(PostureSnapshot)
+                .where(
+                    PostureSnapshot.organization_id == ctx.organization.id,
+                    PostureSnapshot.created_at >= since,
+                )
+                .order_by(PostureSnapshot.created_at.asc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [PostureSnapshotOut.model_validate(r) for r in rows]

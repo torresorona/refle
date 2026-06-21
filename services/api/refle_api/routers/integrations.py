@@ -22,6 +22,7 @@ from refle_api.notify import dispatch_notifications
 from refle_api.schemas import (
     ConnectionCreate,
     ConnectionOut,
+    ConnectionUpdate,
     ConnectorInfo,
     RemediationTaskOut,
     SyncResult,
@@ -80,6 +81,20 @@ async def list_connections(ctx: AuthDep, session: SessionDep) -> list[Connection
         .all()
     )
     return [ConnectionOut.model_validate(c) for c in rows]
+
+
+@router.patch("/connections/{connection_id}", response_model=ConnectionOut)
+async def update_connection(
+    connection_id: uuid.UUID, body: ConnectionUpdate, session: SessionDep, ctx: OwnerOrAdmin
+) -> ConnectionOut:
+    conn = await _get_owned(session, connection_id, ctx.organization.id)
+    if body.monitoring_enabled is not None:
+        conn.monitoring_enabled = body.monitoring_enabled
+    if body.sync_interval_minutes is not None:
+        conn.sync_interval_minutes = body.sync_interval_minutes
+    await session.commit()
+    await session.refresh(conn)
+    return ConnectionOut.model_validate(conn)
 
 
 @router.post("/connections/{connection_id}/sync", response_model=SyncResult)

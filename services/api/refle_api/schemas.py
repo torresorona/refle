@@ -117,6 +117,15 @@ class PostureSummary(BaseModel):
     percent_passing: float
 
 
+class PostureSnapshotOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    passing: int
+    failing: int
+    not_assessed: int
+    percent_ready: int
+    created_at: datetime
+
+
 # --- Evidence ---
 
 
@@ -222,7 +231,14 @@ class ConnectionOut(BaseModel):
     status: ConnectionStatus
     last_synced_at: datetime | None
     last_error: str | None
+    monitoring_enabled: bool
+    sync_interval_minutes: int | None
     created_at: datetime
+
+
+class ConnectionUpdate(BaseModel):
+    monitoring_enabled: bool | None = None
+    sync_interval_minutes: int | None = Field(default=None, ge=1)
 
 
 class SyncResult(BaseModel):

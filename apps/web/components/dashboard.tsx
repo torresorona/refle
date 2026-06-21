@@ -5,7 +5,9 @@ import { useCallback, useEffect, useState } from "react";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { IntegrationsPanel } from "@/components/integrations-panel";
+import { NotificationsPanel } from "@/components/notifications-panel";
 import { PoliciesPanel } from "@/components/policies-panel";
+import { TemplatesPanel } from "@/components/templates-panel";
 import {
   type ControlStatus,
   type Me,
@@ -27,7 +29,7 @@ const STATUS_BADGE: Record<ControlStatus, string> = {
     "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400",
 };
 
-type Tab = "controls" | "evidence" | "policies" | "integrations" | "assistant";
+type Tab = "controls" | "evidence" | "policies" | "templates" | "integrations" | "assistant" | "notifications";
 
 export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [me, setMe] = useState<Me | null>(null);
@@ -112,7 +114,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
 
       <nav className="mt-8 flex gap-1 border-b border-neutral-200 dark:border-neutral-800">
         {(
-          ["controls", "evidence", "policies", "integrations", "assistant"] as Tab[]
+          ["controls", "evidence", "policies", "templates", "integrations", "assistant", "notifications"] as Tab[]
         ).map((t) => (
           <button
             key={t}
@@ -225,10 +227,12 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
 
         {tab === "evidence" && <EvidencePanel canWrite={canWrite} />}
         {tab === "policies" && <PoliciesPanel canAdmin={!!canEdit} />}
+        {tab === "templates" && <TemplatesPanel canAdmin={!!canEdit} />}
         {tab === "integrations" && (
           <IntegrationsPanel canAdmin={!!canEdit} onChanged={load} />
         )}
         {tab === "assistant" && <AssistantPanel canAdmin={!!canEdit} />}
+        {tab === "notifications" && <NotificationsPanel canAdmin={!!canEdit} />}
       </div>
     </main>
   );

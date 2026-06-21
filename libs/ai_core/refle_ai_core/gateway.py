@@ -55,6 +55,10 @@ class AIGateway:
             sovereign=self.settings.provider == "local",
         )
 
+    def for_agent(self) -> AIGateway:
+        agent_settings = self.settings.model_copy(update={"model": self.settings.agent_model})
+        return AIGateway(agent_settings)
+
     async def chat(self, messages: list[Message]) -> str:
         return await self.provider.chat(messages)
 

@@ -22,16 +22,20 @@ from refle_api.routers import (
     health,
     integrations,
     meta,
+    notifications,
     policies,
+    templates,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Register built-in connectors; the enterprise package registers premium ones here too.
+    from refle_ai_core.agents import register_builtin_agents
     from refle_integrations.connectors import register_builtin_connectors
 
     register_builtin_connectors()
+    register_builtin_agents()
     yield
 
 
@@ -51,10 +55,12 @@ def create_app() -> FastAPI:
     app.include_router(meta.router)
     app.include_router(auth.router)
     app.include_router(controls.router)
-    app.include_router(evidence.router)
     app.include_router(policies.router)
+    app.include_router(evidence.router)
     app.include_router(integrations.router)
     app.include_router(ai.router)
+    app.include_router(notifications.router)
+    app.include_router(templates.router)
     return app
 
 

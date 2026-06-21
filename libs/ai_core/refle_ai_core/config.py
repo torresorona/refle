@@ -19,6 +19,7 @@ class AISettings(BaseSettings):
     # provider: "gemini" | "openai" | "local"
     provider: str = "gemini"
     model: str = "gemini-3.5-flash"
+    agent_model: str = "gemini-3.5-flash"
 
     # embedding_provider: "hash" (offline, deterministic; dev default) | "gemini"
     embedding_provider: str = "hash"

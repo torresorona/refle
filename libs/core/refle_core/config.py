@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     s3_access_key: str = "refle"
     s3_secret_key: str = "refle-secret"
     s3_bucket: str = "refle-evidence"
+
+    # Email
+    resend_api_key: str | None = Field(default=None, validation_alias="RESEND_API_KEY")
 
     # Enterprise: a license key unlocks features registered by refle-enterprise.
     license_key: str | None = None

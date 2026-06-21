@@ -8,9 +8,9 @@ controls, agentic generation of documentation and posture-change notifications, 
 **sovereign** mode that runs entirely against local models so your data never leaves
 your boundary.
 
-> Status: **Phases 0–3 complete** — foundation, compliance core + auth, automated control
-> testing, and AI RAG chat — all on `main` and verified end-to-end (including live Gemini).
-> **Phase 4 (agentic AI) is next.** See [What works today](#what-works-today) and the
+> Status: **Phases 0–4 complete** — foundation, compliance core + auth, automated control
+> testing, AI RAG chat, and **Agentic AI** (human-in-the-loop policy drafting & email notifications) — all on `main` and verified end-to-end (including live Gemini and Resend).
+> **Phase 5 (Enterprise/SaaS)** is next. See [What works today](#what-works-today) and the
 > [roadmap](#roadmap).
 
 ## What works today
@@ -22,16 +22,17 @@ your boundary.
   posture dashboard (% passing).
 - **Evidence** — upload artifacts to object storage (sha256-hashed), link them to controls,
   download via presigned URLs.
-- **Policies** — create, version, and capture per-employee acceptance.
+- **Policies** — AI-assisted drafting (via Gemini Pro), built-in web editor for drafts, versioning, and capturing per-employee acceptance.
 - **Automated control testing** — connect an integration (Demo / AWS / GitHub / Okta), run a
   sync, and have control tests update posture and open remediation tasks automatically;
   scheduled hourly via Celery.
 - **AI assistant (RAG)** — ask about your controls/policies/evidence and get answers with
   **citations** (pgvector retrieval). Runs offline with deterministic embeddings, or point
   it at **Gemini** (default), OpenAI, or a local model via one env var.
+- **Agentic Workflows & Notifications** — AI-generated summaries of posture changes delivered via **email (Resend)** and in-app notifications whenever automated tests detect a control failure.
 
 All of the above is covered by tests and was verified end-to-end, including a live Gemini
-key (`gemini-3.5-flash` generation + `gemini-embedding-001` indexing).
+key (`gemini-3.5-flash` generation + `gemini-embedding-001` indexing) and live Resend integration.
 
 ## What's here
 
@@ -101,14 +102,12 @@ deploy/             docker-compose, Helm, Terraform
   auto remediation tasks, encrypted credentials.
 - ✅ **Phase 3 — AI chat**: provider-agnostic gateway, pgvector RAG over
   controls/policies/evidence, chat with citations (Gemini default, offline fallback).
-- ⏭ **Phase 4 — Agentic AI** *(next)*: **human-in-the-loop** AI drafting of policies/docs
-  (draft → review → publish) and **posture-change monitoring with Slack/email
-  notifications** + plain-language AI summaries. Agents run on the same gateway and register
+- ✅ **Phase 4 — Agentic AI**: **human-in-the-loop** AI drafting of policies/docs
+  (draft → web editor review → publish) and **posture-change monitoring with email
+  notifications (via Resend)** + plain-language AI summaries. Agents run on the same gateway and register
   through the `agent_registry` seam; every run is recorded for audit. No auto-publish, no
-  auto-remediation in the community core. Agentic tasks use a stronger model tier
-  (Gemini Pro 3.1) than chat. **Detailed plan:**
-  [docs/phase-4-agentic-ai.md](docs/phase-4-agentic-ai.md).
-- **Phase 5 — Enterprise/SaaS**: multi-tenant control plane, SSO/SAML + SCIM, billing
+  auto-remediation in the community core.
+- ⏭ **Phase 5 — Enterprise/SaaS** *(next)*: multi-tenant control plane, SSO/SAML + SCIM, billing
   (private `refle-enterprise` repo).
 - **Phase 6 — Expansion**: auditor portal, evidence-package export, ISO 27001 crosswalk,
   sovereign/local-mode polish.

@@ -11,9 +11,12 @@ from refle_core.models import (
     ControlStatus,
     EvidenceSource,
     InvitationStatus,
+    NotificationLevel,
     RemediationStatus,
     Role,
+    TemplateType,
 )
+from refle_core.models.policy import PolicyVersionStatus
 
 # --- Auth ---
 
@@ -137,6 +140,20 @@ class DownloadUrl(BaseModel):
 # --- Policies ---
 
 
+class PolicyTemplateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    name: str
+    description: str | None
+    type: TemplateType
+    organization_id: uuid.UUID | None
+    created_at: datetime
+
+
+class PolicyTemplateDetailOut(PolicyTemplateOut):
+    body: str
+
+
 class PolicyCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     slug: str | None = None
@@ -148,12 +165,17 @@ class PolicyVersionCreate(BaseModel):
     body: str = Field(min_length=1)
 
 
+class PolicyVersionUpdate(BaseModel):
+    body: str = Field(min_length=1)
+
+
 class PolicyVersionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID
     version: int
     body: str
     created_at: datetime
+    status: PolicyVersionStatus
 
 
 class PolicyOut(BaseModel):
@@ -237,6 +259,13 @@ class ChatRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
 
 
+class DraftPolicyRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    instructions: str | None = None
+    template_id: uuid.UUID | None = None
+    evidence_id: uuid.UUID | None = None
+
+
 class Citation(BaseModel):
     n: int
     source_type: str
@@ -261,3 +290,31 @@ class AIStatus(BaseModel):
     sovereign: bool
     embedding_provider: str
     indexed_chunks: int
+
+
+# --- Notifications ---
+
+
+class NotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    type: str
+    title: str
+    body: str
+    level: NotificationLevel
+    read_at: datetime | None
+    created_at: datetime
+
+
+class NotificationSettingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    channels: str
+    email_to: str | None
+    slack_webhook_configured: bool
+
+
+class NotificationSettingUpdate(BaseModel):
+    channels: str | None = None
+    email_to: str | None = None
+    slack_webhook_url: str | None = None

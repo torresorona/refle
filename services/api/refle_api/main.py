@@ -17,6 +17,7 @@ from refle_api import __version__
 from refle_api.routers import (
     access_reviews,
     ai,
+    audit,
     auth,
     controls,
     evidence,
@@ -67,6 +68,7 @@ def create_app() -> FastAPI:
     app.include_router(reports.router)
     app.include_router(people.router)
     app.include_router(access_reviews.router)
+    app.include_router(audit.router)
     return app
 
 

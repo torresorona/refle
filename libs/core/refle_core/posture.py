@@ -34,7 +34,7 @@ async def posture_counts(session: AsyncSession, org_id: uuid.UUID) -> PostureCou
     rows = (
         await session.execute(
             select(OrgControl.status, func.count())
-            .where(OrgControl.organization_id == org_id)
+            .where(OrgControl.organization_id == org_id, OrgControl.in_scope.is_(True))
             .group_by(OrgControl.status)
         )
     ).all()

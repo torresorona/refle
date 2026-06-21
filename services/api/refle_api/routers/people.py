@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, HTTPException, status
+from refle_core.audit import record_audit
 from refle_core.models import ChecklistItem, ChecklistKind, Person, PersonStatus, TrainingRecord
 from refle_core.models.people import DEFAULT_OFFBOARDING, DEFAULT_ONBOARDING
 from sqlalchemy import select
@@ -118,6 +119,15 @@ async def update_person(
         if existing is None:
             for item in _checklist_items(person, ChecklistKind.offboarding):
                 session.add(item)
+        await record_audit(
+            session,
+            organization_id=ctx.organization.id,
+            actor_id=ctx.user.id,
+            action="person.terminate",
+            target_type="person",
+            target_id=person.id,
+            summary=f"terminated {person.full_name}",
+        )
 
     await session.commit()
     await session.refresh(person)

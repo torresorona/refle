@@ -92,6 +92,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/switch-org": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Switch Org
+         * @description Re-issue the session for another org the user belongs to.
+         */
+        post: operations["switch_org_auth_switch_org_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -890,6 +910,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Audit Log */
+        get: operations["list_audit_log_audit_log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1024,6 +1061,29 @@ export interface components {
          * @enum {string}
          */
         AccessReviewStatus: "open" | "completed";
+        /** AuditLogOut */
+        AuditLogOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Actor Id */
+            actor_id: string | null;
+            /** Action */
+            action: string;
+            /** Target Type */
+            target_type: string | null;
+            /** Target Id */
+            target_id: string | null;
+            /** Summary */
+            summary: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** AuthToken */
         AuthToken: {
             /** Access Token */
@@ -1189,6 +1249,11 @@ export interface components {
             last_tested_at: string | null;
             /** Last Test Passed */
             last_test_passed: boolean | null;
+            /**
+             * In Scope
+             * @default true
+             */
+            in_scope: boolean;
         };
         /** ControlOut */
         ControlOut: {
@@ -1425,12 +1490,19 @@ export interface components {
             status: components["schemas"]["ControlStatus"];
             /** Owner Id */
             owner_id: string | null;
+            /**
+             * In Scope
+             * @default true
+             */
+            in_scope: boolean;
         };
         /** OrgControlUpdate */
         OrgControlUpdate: {
             status?: components["schemas"]["ControlStatus"] | null;
             /** Owner Id */
             owner_id?: string | null;
+            /** In Scope */
+            in_scope?: boolean | null;
         };
         /** OrgOut */
         OrgOut: {
@@ -1717,6 +1789,14 @@ export interface components {
          * @enum {string}
          */
         Role: "owner" | "admin" | "member" | "auditor";
+        /** SwitchOrgRequest */
+        SwitchOrgRequest: {
+            /**
+             * Organization Id
+             * Format: uuid
+             */
+            organization_id: string;
+        };
         /** SyncResult */
         SyncResult: {
             /** Ok */
@@ -1913,6 +1993,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthToken"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    switch_org_auth_switch_org_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwitchOrgRequest"];
             };
         };
         responses: {
@@ -3485,6 +3598,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_audit_log_audit_log_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogOut"][];
                 };
             };
         };

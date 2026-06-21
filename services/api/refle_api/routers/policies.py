@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
+from refle_core.audit import record_audit
 from refle_core.models import Policy, PolicyAcceptance, PolicyVersion
 from refle_core.models.policy import PolicyVersionStatus
 from sqlalchemy import func, select
@@ -253,6 +254,15 @@ async def publish_version(
             status_code=status.HTTP_404_NOT_FOUND, detail="policy version not found"
         )
     policy_version.status = PolicyVersionStatus.published
+    await record_audit(
+        session,
+        organization_id=ctx.organization.id,
+        actor_id=ctx.user.id,
+        action="policy.publish",
+        target_type="policy",
+        target_id=policy.id,
+        summary=f"published '{policy.name}' v{version}",
+    )
     await session.commit()
     return await _policy_detail(session, policy, ctx.user.id)
 

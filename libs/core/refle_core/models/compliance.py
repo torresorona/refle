@@ -12,7 +12,7 @@ from __future__ import annotations
 import enum
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import Boolean, Enum, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from refle_core.models.base import Base, TenantMixin, TimestampMixin, UUIDMixin
@@ -61,3 +61,6 @@ class OrgControl(UUIDMixin, TimestampMixin, TenantMixin, Base):
     owner_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), default=None
     )
+    # An org can scope a control out of its program (marked not applicable);
+    # out-of-scope controls are excluded from posture and readiness gaps.
+    in_scope: Mapped[bool] = mapped_column(Boolean, default=True)

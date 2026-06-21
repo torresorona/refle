@@ -53,6 +53,7 @@ class ControlCoverage:
     open_remediations: int
     last_tested_at: datetime | None
     last_test_passed: bool | None
+    in_scope: bool
 
 
 @dataclass
@@ -137,6 +138,7 @@ async def control_coverage(session: AsyncSession, org_id: uuid.UUID) -> list[Con
                 open_remediations=rem_by_code.get(c.code, 0),
                 last_tested_at=tested_at,
                 last_test_passed=passed,
+                in_scope=oc.in_scope,
             )
         )
     return out
@@ -161,6 +163,8 @@ async def framework_progress(session: AsyncSession, org_id: uuid.UUID) -> Framew
 async def compute_gaps(session: AsyncSession, org_id: uuid.UUID) -> list[Gap]:
     gaps: list[Gap] = []
     for c in await control_coverage(session, org_id):
+        if not c.in_scope:
+            continue  # out-of-scope controls aren't gaps
         if c.status == ControlStatus.failing.value:
             gaps.append(
                 Gap(

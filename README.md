@@ -105,7 +105,9 @@ deploy/             docker-compose, Helm, Terraform
   (draft → review → publish) and **posture-change monitoring with Slack/email
   notifications** + plain-language AI summaries. Agents run on the same gateway and register
   through the `agent_registry` seam; every run is recorded for audit. No auto-publish, no
-  auto-remediation in the community core.
+  auto-remediation in the community core. Agentic tasks use a stronger model tier
+  (Gemini Pro 3.1) than chat. **Detailed plan:**
+  [docs/phase-4-agentic-ai.md](docs/phase-4-agentic-ai.md).
 - **Phase 5 — Enterprise/SaaS**: multi-tenant control plane, SSO/SAML + SCIM, billing
   (private `refle-enterprise` repo).
 - **Phase 6 — Expansion**: auditor portal, evidence-package export, ISO 27001 crosswalk,

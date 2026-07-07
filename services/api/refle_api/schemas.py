@@ -8,6 +8,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from refle_core.models import (
     AccessDecision,
+    AccessRequestStatus,
     AccessReviewStatus,
     ChecklistKind,
     ConnectionStatus,
@@ -35,6 +36,15 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    organization_id: uuid.UUID | None = None
+
+
+class OrganizationCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+
+class SwitchOrgRequest(BaseModel):
+    organization_id: uuid.UUID
 
 
 class AuthToken(BaseModel):
@@ -63,6 +73,54 @@ class MeResponse(BaseModel):
     organization_id: uuid.UUID
     role: Role
     memberships: list[MembershipOut]
+
+
+class SetupConfigurationItem(BaseModel):
+    key: str
+    label: str
+    configured: bool
+    required: bool = False
+    detail: str | None = None
+
+
+class SetupStatus(BaseModel):
+    deployment_mode: str
+    edition: str
+    organization_configured: bool
+    organization_name: str | None = None
+    configuration: list[SetupConfigurationItem]
+
+
+class AccessRequestCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=200)
+    full_name: str | None = None
+
+
+class AccessRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    email: str
+    full_name: str | None
+    role: Role
+    status: AccessRequestStatus
+    reviewed_at: datetime | None
+    created_at: datetime
+
+
+class UserCreateRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=200)
+    full_name: str | None = None
+    role: Role = Role.member
+
+
+class OrgUserOut(BaseModel):
+    user_id: uuid.UUID
+    email: str
+    full_name: str | None
+    role: Role
+    created_at: datetime
 
 
 # --- Invitations ---
@@ -106,11 +164,13 @@ class OrgControlOut(BaseModel):
     control: ControlOut
     status: ControlStatus
     owner_id: uuid.UUID | None
+    in_scope: bool = True
 
 
 class OrgControlUpdate(BaseModel):
     status: ControlStatus | None = None
     owner_id: uuid.UUID | None = None
+    in_scope: bool | None = None
 
 
 class PostureSummary(BaseModel):
@@ -144,6 +204,18 @@ class ControlCoverageOut(BaseModel):
     open_remediations: int
     last_tested_at: datetime | None
     last_test_passed: bool | None
+    in_scope: bool = True
+
+
+class AuditLogOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    actor_id: uuid.UUID | None
+    action: str
+    target_type: str | None
+    target_id: str | None
+    summary: str | None
+    created_at: datetime
 
 
 class FrameworkProgressOut(BaseModel):

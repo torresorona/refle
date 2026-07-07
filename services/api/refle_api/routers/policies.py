@@ -6,12 +6,13 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
+from refle_core.audit import record_audit
 from refle_core.models import Policy, PolicyAcceptance, PolicyVersion
 from refle_core.models.policy import PolicyVersionStatus
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from refle_api.deps import AuthDep, OwnerOrAdmin, SessionDep
+from refle_api.deps import AuthDep, Members, OwnerOrAdmin, SessionDep
 from refle_api.schemas import (
     AcceptanceOut,
     PolicyCreate,
@@ -253,12 +254,21 @@ async def publish_version(
             status_code=status.HTTP_404_NOT_FOUND, detail="policy version not found"
         )
     policy_version.status = PolicyVersionStatus.published
+    await record_audit(
+        session,
+        organization_id=ctx.organization.id,
+        actor_id=ctx.user.id,
+        action="policy.publish",
+        target_type="policy",
+        target_id=policy.id,
+        summary=f"published '{policy.name}' v{version}",
+    )
     await session.commit()
     return await _policy_detail(session, policy, ctx.user.id)
 
 
 @router.post("/{policy_id}/accept", response_model=PolicyOut)
-async def accept_policy(policy_id: uuid.UUID, ctx: AuthDep, session: SessionDep) -> PolicyOut:
+async def accept_policy(policy_id: uuid.UUID, ctx: Members, session: SessionDep) -> PolicyOut:
     policy = await _get_owned(session, policy_id, ctx.organization.id)
     latest_published = await _latest_published_version(session, policy.id)
     if latest_published is None:

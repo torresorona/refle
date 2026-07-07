@@ -1,0 +1,183 @@
+source: SANS Institute / Cybersecurity Risk Foundation
+source_url: https://www.sans.org/information-security-policy
+templates:
+  - name: Safeguard Validation Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/safeguard-validation-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/WfYBkPwbFP9x
+    docx_url: https://sansorg.egnyte.com/dl/kf4cqFt79CT8
+  - name: Software Development Management Policy
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/software-development-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/pvQMpRRB98V4
+    docx_url: https://sansorg.egnyte.com/dl/p37DWTGCPVW6
+  - name: Education Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/education-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/MF4Kh4RYHKM7
+    docx_url: https://sansorg.egnyte.com/dl/QqwFB4mmmx4q
+  - name: Perimeter Network Access Management Policy
+    category: Network
+    source_url: https://www.sans.org/information-security-policy/perimeter-network-access-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/4Y4gcM4YBMw4
+    docx_url: https://sansorg.egnyte.com/dl/jfwy4RgY8jXm
+  - name: Network Device Management Policy
+    category: Network
+    source_url: https://www.sans.org/information-security-policy/network-device-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/xprfPwhd8KWv
+    docx_url: https://sansorg.egnyte.com/dl/FqjxQRRkCK9q
+  - name: Privileged Account Management Policy
+    category: Identify and Access
+    source_url: https://www.sans.org/information-security-policy/privileged-account-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/B7tqKFXgYv4y
+    docx_url: https://sansorg.egnyte.com/dl/cbYwVmrq9CWP
+  - name: Cloud Service Provider Management Policy
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/cloud-service-provider-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/hrrXhMdxQPv4
+    docx_url: https://sansorg.egnyte.com/dl/JHv9gqTpYTv4
+  - name: Access Management Policy
+    category: Identify and Access
+    source_url: https://www.sans.org/information-security-policy/access-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/HwjQCbRhKk86
+    docx_url: https://sansorg.egnyte.com/dl/KhGypxtxcc9f
+  - name: Safeguard Selection Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/safeguard-selection-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/tqyrMtTH9pGP
+    docx_url: https://sansorg.egnyte.com/dl/gPX9bGT4YYpq
+  - name: Privacy Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/privacy-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/hRjx6MCd6D8T
+    docx_url: https://sansorg.egnyte.com/dl/h97PMCXhqkwy
+  - name: Data Inventory Management Policy
+    category: Identify and Access
+    source_url: https://www.sans.org/information-security-policy/data-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/xWwQHQpYwW6f
+    docx_url: https://sansorg.egnyte.com/dl/gPydFbVGBqYq
+  - name: Software Management Policy
+    category: Compute
+    source_url: https://www.sans.org/information-security-policy/software-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/Dyf8t7trVy8V
+    docx_url: https://sansorg.egnyte.com/dl/g9xkf6pyJmqF
+  - name: Risk Communication Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/risk-communication-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/DwdfgCrqyvfM
+    docx_url: https://sansorg.egnyte.com/dl/xBmG7KkhyHCr
+  - name: Configuration Management Policy
+    category: Compute
+    source_url: https://www.sans.org/information-security-policy/configuration-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/yb4jYx7wx8v8
+    docx_url: https://sansorg.egnyte.com/dl/pG7PfDTd8hKx
+  - name: Identity Management Policy
+    category: Identify and Access
+    source_url: https://www.sans.org/information-security-policy/identity-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/WwJ7MWt9TP7f
+    docx_url: https://sansorg.egnyte.com/dl/8R7XXtpCMFBP
+  - name: Third-Party Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/third-party-risk-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/8tH3H4WjwTT7
+    docx_url: https://sansorg.egnyte.com/dl/tbXBb4xp9XvW
+  - name: Physical Security Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/physical-security-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/gt3Hp7VJv3wJ
+    docx_url: https://sansorg.egnyte.com/dl/wmt7kPMpqXJm
+  - name: Resilience Management Policy
+    category: Resilience
+    source_url: https://www.sans.org/information-security-policy/resilience-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/RvJ6hPJjv37v
+    docx_url: https://sansorg.egnyte.com/dl/tjwd8GFCJgmq
+  - name: Program Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/program-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/HYX44dV7phtW
+    docx_url: https://sansorg.egnyte.com/dl/jjbkhwr9GMpq
+  - name: Vulnerability Management Policy
+    category: Compute
+    source_url: https://www.sans.org/information-security-policy/vulnerability-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/vB9VtDPKrmQv
+    docx_url: https://sansorg.egnyte.com/dl/CKjcyGVWYk4J
+  - name: Asset Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/asset-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/KwfgpbYYFTmT
+    docx_url: https://sansorg.egnyte.com/dl/WhrCw6VrRxRd
+  - name: System Protection Management Policy
+    category: Compute
+    source_url: https://www.sans.org/information-security-policy/system-protection-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/fMMkJtP78VVb
+    docx_url: https://sansorg.egnyte.com/dl/9wDHqTW6pbVb
+  - name: Email Management Policy
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/email-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/cTpFRGqtDHVm
+    docx_url: https://sansorg.egnyte.com/dl/hpdHqrQBKQwm
+  - name: Log Management Policy
+    category: Identify and Access
+    source_url: https://www.sans.org/information-security-policy/log-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/KdMRCdqRKTKw
+    docx_url: https://sansorg.egnyte.com/dl/VhXhkRxhygKf
+  - name: Internal Network Access Management Policy
+    category: Network
+    source_url: https://www.sans.org/information-security-policy/internal-network-access-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/KFQ6wh4tJjdw
+    docx_url: https://sansorg.egnyte.com/dl/8QKCYwchvfXJ
+  - name: Software Development Vulnerability Management Policy
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/software-development-vulnerability-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/6hVWhgRK9bpW
+    docx_url: https://sansorg.egnyte.com/dl/Pwhy8KhCfpPg
+  - name: Mobile Device Management Policy
+    category: Compute
+    source_url: https://www.sans.org/information-security-policy/mobile-device-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/ggkPDhqJg3xT
+    docx_url: https://sansorg.egnyte.com/dl/jXfMGY8vWwKr
+  - name: Safeguard Implementation Management Policy
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/safeguard-implementation-management-policy
+    pdf_url: https://sansorg.egnyte.com/dl/qQ34T8bpbtDC
+    docx_url: https://sansorg.egnyte.com/dl/k34VwyRT3JBf
+  - name: Password Construction Standard
+    category: Identify and Access
+    source_url: https://www.sans.org/information-security-policy/password-construction-standard
+    pdf_url: https://sansorg.egnyte.com/dl/myCVQDx38p7B
+    docx_url: https://sansorg.egnyte.com/dl/W83RqFcmQhQC
+  - name: Database Credentials Standard
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/database-credentials-standard
+    pdf_url: https://sansorg.egnyte.com/dl/6WxJQhvVXyBF
+    docx_url: https://sansorg.egnyte.com/dl/cGjPcKwt9T8b
+  - name: Technology Equipment Disposal Standard
+    category: Compute
+    source_url: https://www.sans.org/information-security-policy/technology-equipment-disposal-standard
+    pdf_url: https://sansorg.egnyte.com/dl/bkCwR6FyDB76
+    docx_url: https://sansorg.egnyte.com/dl/kCkxxWfWGD3t
+  - name: Acceptable Use Standard
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/acceptable-use-standard
+    pdf_url: https://sansorg.egnyte.com/dl/HMyyypyXVW6Y
+    docx_url: https://sansorg.egnyte.com/dl/bPm44Jpw8f3b
+  - name: Acceptable Encryption Standard
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/acceptable-encryption-standard
+    pdf_url: https://sansorg.egnyte.com/dl/rbw6B8Y4P6gX
+    docx_url: https://sansorg.egnyte.com/dl/rwcCCGMrMpmC
+  - name: Artificial Intelligence Standard
+    category: Application
+    source_url: https://www.sans.org/information-security-policy/artificial-intelligence-acceptable-use-standard
+    pdf_url: https://sansorg.egnyte.com/dl/KmGPm4xP9hKY
+    docx_url: https://sansorg.egnyte.com/dl/4jVGtwvrP6v8
+  - name: Internet Usage Standard
+    category: Network
+    source_url: https://www.sans.org/information-security-policy/internet-acceptable-use-standard
+    pdf_url: https://sansorg.egnyte.com/dl/DqqTd9QRpDCv
+    docx_url: https://sansorg.egnyte.com/dl/WjHvbfJG7tgr
+  - name: Acquisition Assessment Standard
+    category: Governance
+    source_url: https://www.sans.org/information-security-policy/acquisition-assessment-standard
+    pdf_url: https://sansorg.egnyte.com/dl/3pmckcrwYDD4
+    docx_url: https://sansorg.egnyte.com/dl/QfjqcMkmyq9V

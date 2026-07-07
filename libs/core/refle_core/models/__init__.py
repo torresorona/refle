@@ -3,7 +3,9 @@
 Alembic's ``env.py`` imports it so autogenerate sees the full schema.
 """
 
+from refle_core.models.access_request import AccessRequest, AccessRequestStatus
 from refle_core.models.ai_run import AiRun, AiRunStatus
+from refle_core.models.audit import AuditLog
 from refle_core.models.base import Base
 from refle_core.models.compliance import (
     Control,
@@ -51,6 +53,8 @@ __all__ = [
     "User",
     "Membership",
     "Role",
+    "AccessRequest",
+    "AccessRequestStatus",
     "Invitation",
     "InvitationStatus",
     "Framework",
@@ -75,6 +79,7 @@ __all__ = [
     "Embedding",
     "AiRun",
     "AiRunStatus",
+    "AuditLog",
     "Notification",
     "NotificationLevel",
     "NotificationSetting",

@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, HTTPException, status
+from refle_core.audit import record_audit
 from refle_core.models import ChecklistItem, ChecklistKind, Person, PersonStatus, TrainingRecord
 from refle_core.models.people import DEFAULT_OFFBOARDING, DEFAULT_ONBOARDING
 from sqlalchemy import select
@@ -45,8 +46,17 @@ async def _get_person(session: AsyncSession, person_id: uuid.UUID, org_id: uuid.
     return p
 
 
+async def _validate_manager(
+    session: AsyncSession, manager_id: uuid.UUID | None, org_id: uuid.UUID
+) -> None:
+    if manager_id is None:
+        return
+    await _get_person(session, manager_id, org_id)
+
+
 @router.post("", response_model=PersonOut, status_code=status.HTTP_201_CREATED)
 async def create_person(body: PersonCreate, session: SessionDep, ctx: Members) -> PersonOut:
+    await _validate_manager(session, body.manager_id, ctx.organization.id)
     person = Person(
         organization_id=ctx.organization.id,
         full_name=body.full_name,
@@ -98,6 +108,12 @@ async def update_person(
     if body.title is not None:
         person.title = body.title
     if body.manager_id is not None:
+        if body.manager_id == person.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="person cannot be their own manager",
+            )
+        await _validate_manager(session, body.manager_id, ctx.organization.id)
         person.manager_id = body.manager_id
     if body.status is not None:
         person.status = body.status
@@ -118,6 +134,15 @@ async def update_person(
         if existing is None:
             for item in _checklist_items(person, ChecklistKind.offboarding):
                 session.add(item)
+        await record_audit(
+            session,
+            organization_id=ctx.organization.id,
+            actor_id=ctx.user.id,
+            action="person.terminate",
+            target_type="person",
+            target_id=person.id,
+            summary=f"terminated {person.full_name}",
+        )
 
     await session.commit()
     await session.refresh(person)

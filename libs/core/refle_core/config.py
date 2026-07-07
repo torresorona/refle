@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Edition (packaging): "core" (Hosted Core / OSS) or "enterprise". The
     # enterprise package flips this; the UI uses it for "Coming Soon" gating.
     edition: str = "core"
+    # Deployment mode (product shape): self_hosted_core runs as one organization
+    # per instance. Managed and Enterprise modes can relax this in their packages.
+    deployment_mode: str = "self_hosted_core"
 
     # Async SQLAlchemy URL (asyncpg driver).
     database_url: str = "postgresql+asyncpg://refle:refle@localhost:5432/refle"
@@ -61,6 +64,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.env.lower() in {"production", "prod"}
+
+    @property
+    def is_self_hosted_core(self) -> bool:
+        return self.edition == "core" and self.deployment_mode == "self_hosted_core"
 
 
 @lru_cache

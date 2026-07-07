@@ -20,18 +20,18 @@ export function NotificationsPanel({ canAdmin }: { canAdmin: boolean }) {
     try {
       const [notifs, sets] = await Promise.all([
         api.notifications(),
-        api.notificationSettings(),
+        canAdmin ? api.notificationSettings() : Promise.resolve(null),
       ]);
       setNotifications(notifs);
       setSettings(sets);
-      setChannels(sets.channels);
-      setEmailTo(sets.email_to || "");
+      setChannels(sets?.channels ?? "");
+      setEmailTo(sets?.email_to || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load notifications");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [canAdmin]);
 
   useEffect(() => {
     void load();

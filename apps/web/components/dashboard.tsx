@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { AssistantPanel } from "@/components/assistant-panel";
+import { AuditPanel } from "@/components/audit-panel";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { IntegrationsPanel } from "@/components/integrations-panel";
 import { NotificationsPanel } from "@/components/notifications-panel";
@@ -10,6 +11,7 @@ import { PeoplePanel } from "@/components/people-panel";
 import { PoliciesPanel } from "@/components/policies-panel";
 import { PostureTrend } from "@/components/posture-trend";
 import { ReadinessPanel } from "@/components/readiness-panel";
+import { SettingsPanel } from "@/components/settings-panel";
 import { TemplatesPanel } from "@/components/templates-panel";
 import {
   type ControlStatus,
@@ -41,7 +43,8 @@ type Tab =
   | "integrations"
   | "people"
   | "assistant"
-  | "notifications";
+  | "notifications"
+  | "audit";
 
 const TABS: Tab[] = [
   "controls",
@@ -53,6 +56,7 @@ const TABS: Tab[] = [
   "people",
   "assistant",
   "notifications",
+  "audit",
 ];
 
 export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
@@ -61,6 +65,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [controls, setControls] = useState<OrgControl[]>([]);
   const [edition, setEdition] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("controls");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,6 +105,18 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     }
   }
 
+  async function toggleScope(oc: OrgControl) {
+    const prev = controls;
+    const next = !oc.in_scope;
+    setControls((cs) => cs.map((c) => (c.id === oc.id ? { ...c, in_scope: next } : c)));
+    try {
+      await api.updateControl(oc.id, { in_scope: next });
+      setPosture(await api.posture());
+    } catch {
+      setControls(prev);
+    }
+  }
+
   async function signOut() {
     try {
       await api.logout();
@@ -120,24 +137,50 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
             <h1 className="text-xl font-semibold tracking-tight">refle</h1>
             {edition && (
               <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-700">
-                {edition === "core" ? "Hosted Core" : edition}
+                {edition === "core" ? "Core" : edition}
               </span>
             )}
           </div>
           {me && (
-            <p className="text-sm text-neutral-500">
-              {me.memberships[0]?.organization.name ?? "Your organization"} ·{" "}
-              {me.email} ({me.role})
-            </p>
+            <div className="mt-2 space-y-2 text-sm text-neutral-500">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs uppercase tracking-wide text-neutral-400">
+                  Organization
+                </span>
+                <span>
+                  {me.memberships.find((m) => m.organization.id === me.organization_id)
+                    ?.organization.name ?? "Configured organization"}
+                </span>
+                <span className="text-neutral-300 dark:text-neutral-700">/</span>
+                <span>
+                  {me.email} ({me.role === "member" ? "user" : me.role})
+                </span>
+              </div>
+            </div>
           )}
         </div>
-        <button
-          onClick={signOut}
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm transition hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Settings"
+              title="Settings"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-300 text-lg transition hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            >
+              ⚙
+            </button>
+          )}
+          <button
+            onClick={signOut}
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm transition hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
+
+      {canEdit && <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />}
 
       {error && (
         <p className="mt-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
@@ -200,6 +243,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                       <th className="px-4 py-2 font-medium">Code</th>
                       <th className="px-4 py-2 font-medium">Control</th>
                       <th className="px-4 py-2 font-medium">Status</th>
+                      <th className="px-4 py-2 font-medium">In scope</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -248,6 +292,20 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
                             </span>
                           )}
                         </td>
+                        <td className="px-4 py-3">
+                          {canEdit ? (
+                            <input
+                              type="checkbox"
+                              checked={oc.in_scope}
+                              onChange={() => toggleScope(oc)}
+                              aria-label="In scope"
+                            />
+                          ) : (
+                            <span className="text-xs text-neutral-400">
+                              {oc.in_scope ? "Yes" : "No"}
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -267,6 +325,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
         )}
         {tab === "assistant" && <AssistantPanel canAdmin={!!canEdit} />}
         {tab === "notifications" && <NotificationsPanel canAdmin={!!canEdit} />}
+        {tab === "audit" && <AuditPanel />}
       </div>
     </main>
   );

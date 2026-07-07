@@ -11,6 +11,7 @@ from refle_core.models import (
     AccessReview,
     AccessReviewItem,
     AccessReviewStatus,
+    Person,
     RemediationStatus,
     RemediationTask,
 )
@@ -62,10 +63,40 @@ async def _get_review(
     return review
 
 
+async def _validate_people(
+    session: AsyncSession, person_ids: set[uuid.UUID], org_id: uuid.UUID
+) -> None:
+    if not person_ids:
+        return
+    found = set(
+        (
+            await session.execute(
+                select(Person.id).where(
+                    Person.organization_id == org_id,
+                    Person.id.in_(person_ids),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    missing = person_ids - found
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"person not found: {sorted(str(p) for p in missing)}",
+        )
+
+
 @router.post("", response_model=AccessReviewDetail, status_code=status.HTTP_201_CREATED)
 async def create_review(
     body: AccessReviewCreate, session: SessionDep, ctx: Members
 ) -> AccessReviewDetail:
+    await _validate_people(
+        session,
+        {item.person_id for item in body.items if item.person_id is not None},
+        ctx.organization.id,
+    )
     review = AccessReview(
         organization_id=ctx.organization.id, name=body.name, due_at=body.due_at
     )

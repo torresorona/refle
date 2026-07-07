@@ -12,7 +12,7 @@ from refle_core.models.policy import PolicyVersionStatus
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from refle_api.deps import AuthDep, OwnerOrAdmin, SessionDep
+from refle_api.deps import AuthDep, Members, OwnerOrAdmin, SessionDep
 from refle_api.schemas import (
     AcceptanceOut,
     PolicyCreate,
@@ -268,7 +268,7 @@ async def publish_version(
 
 
 @router.post("/{policy_id}/accept", response_model=PolicyOut)
-async def accept_policy(policy_id: uuid.UUID, ctx: AuthDep, session: SessionDep) -> PolicyOut:
+async def accept_policy(policy_id: uuid.UUID, ctx: Members, session: SessionDep) -> PolicyOut:
     policy = await _get_owned(session, policy_id, ctx.organization.id)
     latest_published = await _latest_published_version(session, policy.id)
     if latest_published is None:

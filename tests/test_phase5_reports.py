@@ -100,10 +100,19 @@ async def test_audit_package_is_valid_zip(client):
 async def test_auditor_is_read_only(client):
     headers, org_id = await _register(client)
     await client.get("/controls", headers=headers)
+    policy = await client.post(
+        "/policies",
+        headers=headers,
+        json={"name": "Security Policy", "body": "# security"},
+    )
+    assert policy.status_code == 201
+    policy_id = policy.json()["id"]
+    publish = await client.post(f"/policies/{policy_id}/versions/1/publish", headers=headers)
+    assert publish.status_code == 200
 
     # Create an auditor membership + token directly.
     async with get_sessionmaker()() as session:
-        from refle_core.models import Membership, Role, User
+        from refle_core.models import Membership, Notification, Role, User
 
         u = User(
             email=f"aud-{uuid.uuid4().hex[:8]}@example.com",
@@ -112,8 +121,16 @@ async def test_auditor_is_read_only(client):
         session.add(u)
         await session.flush()
         session.add(Membership(organization_id=org_id, user_id=u.id, role=Role.auditor))
+        notification = Notification(
+            organization_id=org_id,
+            type="probe",
+            title="Probe",
+            body="Probe notification",
+        )
+        session.add(notification)
         await session.commit()
         token = create_access_token(str(u.id), extra={"org_id": str(org_id)})
+        notification_id = notification.id
 
     aud = {"Authorization": f"Bearer {token}"}
     # Drop the owner's session cookie set during _register so the Bearer token
@@ -130,3 +147,8 @@ async def test_auditor_is_read_only(client):
         json={"name": "X", "body": "# x"},
     )
     assert create.status_code == 403
+    assert (await client.post(f"/policies/{policy_id}/accept", headers=aud)).status_code == 403
+    assert (
+        await client.post(f"/notifications/{notification_id}/read", headers=aud)
+    ).status_code == 403
+    assert (await client.get("/notifications/settings", headers=aud)).status_code == 403

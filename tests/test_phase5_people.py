@@ -5,6 +5,8 @@ from datetime import date, timedelta
 
 import pytest
 from conftest import db_available
+from refle_core.db import get_sessionmaker
+from refle_core.security import create_access_token, hash_password
 
 pytestmark = pytest.mark.skipif(not db_available(), reason="requires Postgres on :5432")
 
@@ -112,3 +114,53 @@ async def test_access_review_flow_revoke_opens_remediation(client):
     completed = await client.post(f"/access-reviews/{rid}/complete", headers=headers)
     assert completed.status_code == 200
     assert completed.json()["status"] == "completed"
+
+
+async def test_cross_tenant_person_references_are_rejected(client):
+    headers_a = await _register(client)
+    org_a_person = await _person(client, headers_a)
+
+    async with get_sessionmaker()() as session:
+        from refle_core.models import Membership, Organization, Role, User
+
+        org_b = Organization(name="Manual second org", slug=f"manual-{uuid.uuid4().hex[:8]}")
+        user_b = User(
+            email=f"b-{uuid.uuid4().hex[:8]}@example.com",
+            hashed_password=hash_password("supersecret123"),
+        )
+        session.add_all([org_b, user_b])
+        await session.flush()
+        session.add(Membership(organization_id=org_b.id, user_id=user_b.id, role=Role.owner))
+        await session.commit()
+        token_b = create_access_token(str(user_b.id), extra={"org_id": str(org_b.id)})
+
+    client.cookies.clear()
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+    review = await client.post(
+        "/access-reviews",
+        headers=headers_b,
+        json={
+            "name": "Cross-tenant access review",
+            "items": [{"system": "okta", "person_id": org_a_person}],
+        },
+    )
+    assert review.status_code == 404
+
+    create = await client.post(
+        "/people",
+        headers=headers_b,
+        json={
+            "full_name": "Grace Hopper",
+            "email": f"p-{uuid.uuid4().hex[:8]}@example.com",
+            "manager_id": org_a_person,
+        },
+    )
+    assert create.status_code == 404
+
+    org_b_person = await _person(client, headers_b)
+    update = await client.patch(
+        f"/people/{org_b_person}",
+        headers=headers_b,
+        json={"manager_id": org_a_person},
+    )
+    assert update.status_code == 404

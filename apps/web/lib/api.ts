@@ -79,6 +79,49 @@ export type Me = {
   memberships: { organization: Org; role: Role }[];
 };
 
+export type SetupConfigurationItem = {
+  key: string;
+  label: string;
+  configured: boolean;
+  required: boolean;
+  detail: string | null;
+};
+
+export type SetupStatus = {
+  deployment_mode: string;
+  edition: string;
+  organization_configured: boolean;
+  organization_name: string | null;
+  configuration: SetupConfigurationItem[];
+};
+
+export type AccessRequest = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: Role;
+  status: "pending" | "approved" | "rejected";
+  reviewed_at: string | null;
+  created_at: string;
+};
+
+export type OrgUser = {
+  user_id: string;
+  email: string;
+  full_name: string | null;
+  role: Role;
+  created_at: string;
+};
+
+export type Invitation = {
+  id: string;
+  email: string;
+  role: Role;
+  status: "pending" | "accepted" | "revoked";
+  token: string;
+  expires_at: string;
+};
+
 export type Control = {
   id: string;
   code: string;
@@ -338,6 +381,7 @@ export type NotificationSettingOut = {
 };
 
 export const api = {
+  setupStatus: () => request<SetupStatus>("/setup/status"),
   register: (d: {
     org_name: string;
     email: string;
@@ -348,11 +392,39 @@ export const api = {
       method: "POST",
       body: JSON.stringify(d),
     }),
-  login: (d: { email: string; password: string }) =>
+  login: (d: { email: string; password: string; organization_id?: string }) =>
     request<AuthToken>("/auth/login", { method: "POST", body: JSON.stringify(d) }),
+  createOrganization: (d: { name: string }) =>
+    request<AuthToken>("/auth/organizations", {
+      method: "POST",
+      body: JSON.stringify(d),
+    }),
+  requestAccess: (d: { email: string; password: string; full_name?: string }) =>
+    request<AccessRequest>("/auth/request-access", {
+      method: "POST",
+      body: JSON.stringify(d),
+    }),
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   me: () => request<Me>("/auth/me"),
   meta: () => request<Meta>("/meta"),
+  users: () => request<OrgUser[]>("/auth/users"),
+  createUser: (d: {
+    email: string;
+    password: string;
+    full_name?: string;
+    role: Role;
+  }) => request<OrgUser>("/auth/users", { method: "POST", body: JSON.stringify(d) }),
+  invitations: () => request<Invitation[]>("/auth/invitations"),
+  createInvitation: (d: { email: string; role: Role }) =>
+    request<Invitation>("/auth/invitations", {
+      method: "POST",
+      body: JSON.stringify(d),
+    }),
+  accessRequests: () => request<AccessRequest[]>("/auth/access-requests"),
+  approveAccessRequest: (id: string) =>
+    request<AccessRequest>(`/auth/access-requests/${id}/approve`, { method: "POST" }),
+  rejectAccessRequest: (id: string) =>
+    request<AccessRequest>(`/auth/access-requests/${id}/reject`, { method: "POST" }),
   switchOrg: (organization_id: string) =>
     request<AuthToken>("/auth/switch-org", {
       method: "POST",

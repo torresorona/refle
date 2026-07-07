@@ -11,6 +11,7 @@ import { PeoplePanel } from "@/components/people-panel";
 import { PoliciesPanel } from "@/components/policies-panel";
 import { PostureTrend } from "@/components/posture-trend";
 import { ReadinessPanel } from "@/components/readiness-panel";
+import { SettingsPanel } from "@/components/settings-panel";
 import { TemplatesPanel } from "@/components/templates-panel";
 import {
   type ControlStatus,
@@ -64,6 +65,7 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
   const [controls, setControls] = useState<OrgControl[]>([]);
   const [edition, setEdition] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("controls");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,12 +117,6 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
     }
   }
 
-  async function switchOrg(orgId: string) {
-    if (orgId === me?.organization_id) return;
-    await api.switchOrg(orgId);
-    await load(); // reload everything under the new org context
-  }
-
   async function signOut() {
     try {
       await api.logout();
@@ -141,38 +137,50 @@ export function Dashboard({ onSignOut }: { onSignOut: () => void }) {
             <h1 className="text-xl font-semibold tracking-tight">refle</h1>
             {edition && (
               <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-xs uppercase tracking-wide text-neutral-500 dark:border-neutral-700">
-                {edition === "core" ? "Hosted Core" : edition}
+                {edition === "core" ? "Core" : edition}
               </span>
             )}
           </div>
           {me && (
-            <div className="mt-1 flex items-center gap-2 text-sm text-neutral-500">
-              {me.memberships.length > 1 ? (
-                <select
-                  value={me.organization_id}
-                  onChange={(e) => switchOrg(e.target.value)}
-                  className="rounded-md border border-neutral-300 bg-transparent px-2 py-0.5 text-sm outline-none dark:border-neutral-700"
-                >
-                  {me.memberships.map((m) => (
-                    <option key={m.organization.id} value={m.organization.id}>
-                      {m.organization.name}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span>{me.memberships[0]?.organization.name ?? "Your organization"}</span>
-              )}
-              <span>· {me.email} ({me.role})</span>
+            <div className="mt-2 space-y-2 text-sm text-neutral-500">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs uppercase tracking-wide text-neutral-400">
+                  Organization
+                </span>
+                <span>
+                  {me.memberships.find((m) => m.organization.id === me.organization_id)
+                    ?.organization.name ?? "Configured organization"}
+                </span>
+                <span className="text-neutral-300 dark:text-neutral-700">/</span>
+                <span>
+                  {me.email} ({me.role === "member" ? "user" : me.role})
+                </span>
+              </div>
             </div>
           )}
         </div>
-        <button
-          onClick={signOut}
-          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm transition hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Settings"
+              title="Settings"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-300 text-lg transition hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            >
+              ⚙
+            </button>
+          )}
+          <button
+            onClick={signOut}
+            className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm transition hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
+
+      {canEdit && <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />}
 
       {error && (
         <p className="mt-6 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">

@@ -15,6 +15,7 @@ from refle_core.models import (
     Policy,
     PolicyTemplate,
     PolicyVersion,
+    Role,
 )
 from refle_core.models.policy import PolicyVersionStatus
 from refle_extensions.registry import agent_registry
@@ -82,7 +83,8 @@ async def chat(body: ChatRequest, ctx: AuthDep, session: SessionDep) -> ChatResp
     embedder = get_embedder()
 
     try:
-        if await _indexed_count(session, org_id) == 0:
+        indexed_count = await _indexed_count(session, org_id)
+        if indexed_count == 0 and ctx.role != Role.auditor:
             await index_org_content(session, org_id, embedder)
         hits = await retrieve(session, org_id, body.question, embedder, k=5)
     except Exception as exc:  # noqa: BLE001 - degrade if the embedder is unavailable

@@ -6,7 +6,7 @@ from refle_core.crypto import encrypt
 from refle_core.models import Notification, NotificationSetting
 from sqlalchemy import select
 
-from refle_api.deps import AuthDep, OwnerOrAdmin, SessionDep
+from refle_api.deps import AuthDep, Members, OwnerOrAdmin, SessionDep
 from refle_api.schemas import (
     NotificationOut,
     NotificationSettingOut,
@@ -35,7 +35,7 @@ async def list_notifications(ctx: AuthDep, session: SessionDep) -> list[Notifica
 
 @router.post("/{notification_id}/read", response_model=NotificationOut)
 async def mark_read(
-    notification_id: uuid.UUID, ctx: AuthDep, session: SessionDep
+    notification_id: uuid.UUID, ctx: Members, session: SessionDep
 ) -> NotificationOut:
     notif = (
         await session.execute(
@@ -57,7 +57,7 @@ async def mark_read(
 
 
 @router.get("/settings", response_model=NotificationSettingOut)
-async def get_settings(ctx: AuthDep, session: SessionDep) -> NotificationSettingOut:
+async def get_settings(ctx: OwnerOrAdmin, session: SessionDep) -> NotificationSettingOut:
     setting = (
         await session.execute(
             select(NotificationSetting).where(

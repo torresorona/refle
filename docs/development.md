@@ -16,6 +16,9 @@ make up             # start infra (Postgres+pgvector, Redis, MinIO)
 make migrate        # apply database migrations
 ```
 
+For the product-facing Self-Hosted Core setup flow, see
+[`docs/self-hosted-core-setup.md`](self-hosted-core-setup.md).
+
 ## Running the apps
 
 In separate terminals:

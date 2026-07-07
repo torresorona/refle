@@ -112,7 +112,8 @@ async def test_draft_from_template_uses_template_body(client):
     assert r.status_code == 201, r.text
     body = r.json()["versions"][0]["body"]
     # Offline, the fallback returns the chosen template verbatim as the baseline.
-    assert "Access Control Policy" in body
+    assert f"# {builtin['name']}" in body
+    assert "SANS/CRF template page" in body
 
 
 async def test_publish_then_accept_targets_published_version(client):
@@ -336,7 +337,10 @@ async def test_dispatch_posts_to_slack_when_configured(client, monkeypatch):
 async def test_templates_list_includes_builtin_and_create_custom(client):
     headers, _ = await _register(client)
     templates = (await client.get("/templates", headers=headers)).json()
-    assert any(t["type"] == "builtin" for t in templates)
+    builtins = [t for t in templates if t["type"] == "builtin"]
+    assert len(builtins) >= 36
+    assert any(t["name"] == "Access Management Policy" for t in builtins)
+    assert not any(t["name"] == "SANS Access Control Policy" for t in builtins)
 
     created = await client.post(
         "/templates",

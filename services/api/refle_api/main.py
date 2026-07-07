@@ -28,6 +28,7 @@ from refle_api.routers import (
     people,
     policies,
     reports,
+    setup,
     templates,
 )
 
@@ -56,6 +57,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(setup.router)
     app.include_router(meta.router)
     app.include_router(auth.router)
     app.include_router(controls.router)

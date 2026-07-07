@@ -4,14 +4,26 @@ This doc does two things: records the **Tier 1 open-core admin wrap-up** (delive
 the **enterprise admin roadmap** (Tiers 2–3) so the Core ↔ Enterprise split stays clean as work
 moves into the private `refle-enterprise` repo.
 
-## Guiding principle — three admin tiers, not one
+## Guiding principle — deployment shapes first
 
-A business may run refle for itself **or as a service for many orgs** (GitLab-style). That implies
-three *distinct* admin surfaces, each mapped to an edition:
+Self-hosted Core is intentionally **single-organization per instance**. The data model keeps
+`Membership` and tenant-scoped tables so Enterprise can add multi-organization behavior later, but
+Core product flows must not let users create or switch between multiple organizations.
+
+The licensed deployment shapes are:
+
+| Offering | Instance shape | Organization shape |
+| --- | --- | --- |
+| **Self-Hosted Core** | customer-run single instance | one Organization only |
+| **Managed Core** | Refle-run multi-tenant service | one Organization per customer |
+| **Managed Enterprise** | Refle-run single-tenant/separate instances | one customer, Groups/Projects available |
+| **On-Prem Enterprise** | customer-run instance | multi-organization for that customer; not for resale/MSP use |
+
+That implies three *distinct* admin surfaces, each mapped to an edition:
 
 | Tier | Admin | Scope | Edition |
 | --- | --- | --- | --- |
-| 1 | **Org admin** (owner/admin) | one org: controls, people, policies, integrations | **Core** |
+| 1 | **Org admin** (owner) | one org: users, settings, controls, people, policies, integrations | **Core** |
 | 2 | **Account/Group admin** | a business's many child orgs: create/suspend, cross-org roles, roll-up reporting | **Enterprise** (Hosted Enterprise / On-Prem Enterprise) |
 | 3 | **Instance/operator admin** | the whole deployment: all orgs, *global* framework catalog, instance settings | **On-Prem Enterprise** + the Hosted operator console |
 
@@ -42,15 +54,22 @@ verified live in the browser). Closes the open-core admin gap so focus can shift
   and the change is audited (`control.scope`).
 - **Done:** scoping a control out drops the posture denominator and removes its gaps.
 
-### WI-3 — Org switcher
-- `POST /auth/switch-org` (verify membership → re-issue the org-scoped session cookie). Web header
-  shows a switcher when the user has >1 membership (multi-org membership already existed in data).
-- **Done:** a multi-org user switches context; switching to a non-member org is 403.
+### WI-3 — Self-hosted Core onboarding, users, and settings
+- Core setup is first-organization-only: `POST /auth/register` creates the owner and Organization
+  only while no Organization exists; after that, registration becomes an owner-approved access
+  request rather than another organization.
+- `GET /setup/status` exposes organization status plus configured/pending environment-backed
+  settings for onboarding.
+- Owners manage app users separately from compliance Persons: direct user creation, pending access
+  request approval/rejection, and invitations. Core-managed roles are Owner, User (`member`), and
+  Auditor.
+- **Done:** the web login portal stops prompting for organization creation after setup; the dashboard
+  shows one active Organization and exposes owner settings behind a gear action.
 
 ### Migration & tests
 - Migration `b4538924eeda` (audit_logs + `org_controls.in_scope`, backfilled true).
 - `tests/test_phase6_admin.py`: scoping excludes from posture/gaps; scope+status audited;
-  switch-org happy path + 403; audit-log requires owner/admin.
+  single-org Core rejects switching to another organization; audit-log requires owner/admin.
 
 ### Deferred to a follow-on **core** slice (not yet built)
 - **Custom control / framework *authoring*** (org-owned `Control` via the nullable-`organization_id`
@@ -72,8 +91,8 @@ Goal: a business managing many orgs, like GitLab Groups. **Lives in `refle-enter
 - **Identity:** rides **WorkOS Organizations + Admin Portal** (per-org SSO/SAML self-setup + SCIM
   directory sync), which memory already slates for the enterprise repo — same seam, not a separate
   build.
-- **Editions:** **Hosted Enterprise** (Coming Soon — gated on Refle's own SOC 2 + FedRAMP) and
-  **On-Prem Enterprise** (white-glove). Hosted Core explicitly excludes this.
+- **Editions:** **Managed Enterprise** (Coming Soon — gated on Refle's own SOC 2 + FedRAMP) and
+  **On-Prem Enterprise** (white-glove). Core explicitly excludes this.
 
 ## Tier 3 — Instance/operator admin (ON-PREM ENTERPRISE + Hosted operator)
 
